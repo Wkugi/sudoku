@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Sudoku">
+<meta name="theme-color" content="#1e1e1e">
+<title>Sudoku</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root {
+  --bar: #1e1e1e; --bar-fg: #fff; --accent: #ffb300; --status: #555; --nb-bg: #f1f1f1; --nb-fg: #333;
+  --nb-done: #c4c4c4; --nb-sel: #cfdcf0; --nb-note: #ffe9b3; --user: #1f5fa8;
+  --font: -apple-system, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: #fff; font-family: var(--font); color: #222; }
+body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+#app { display: flex; flex-direction: column; align-items: center; justify-content: safe center; height: 100%;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+#top { width: var(--w); display: flex; align-items: center; justify-content: space-between; height: 44px; flex: none; }
+#top h1 { font-size: 17px; font-weight: 600; margin: 0; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#top h1 span { font-weight: 400; color: var(--status); }
+.iconbtn { background: none; border: none; padding: 8px; cursor: pointer; color: #333; border-radius: 8px; }
+.iconbtn:hover { background: #f0f0f0; }
+#board { display: block; flex: none; touch-action: none; cursor: default; }
+#status { width: var(--w); min-height: 22px; font-size: 13px; color: var(--status); padding: 4px 2px; flex: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#editbar { width: var(--w); display: none; gap: 6px; padding: 2px 0 6px; flex: none; }
+#editbar.on { display: flex; }
+#editbar button { flex: 1; font: 13px var(--font); padding: 7px 4px; border-radius: 8px; border: 1px solid #ccc; background: #fafafa; cursor: pointer; color: #333; }
+#editbar button.active { background: var(--bar); color: var(--accent); border-color: var(--bar); }
+.bar { width: var(--w); display: grid; gap: 4px; flex: none; }
+.bar button { border: none; border-radius: 6px; background: var(--nb-bg); color: var(--nb-fg); cursor: pointer;
+  font-family: var(--font); position: relative; padding: 0; touch-action: manipulation; }
+.bar button:active { filter: brightness(.92); }
+.bar button .cnt { position: absolute; bottom: 2px; right: 4px; font-size: 9px; color: #9a9a9a; }
+.bar button.done { color: var(--nb-done); }
+.bar button.sel { background: var(--nb-sel); }
+.bar button.note-on { background: var(--nb-note); }
+.bar button.mode-on { background: var(--bar); color: var(--accent); }
+.bar button small { display: block; font-size: 10px; margin-top: 1px; }
+#barMouse { grid-template-columns: repeat(11, 1fr); height: var(--nbh); margin-bottom: 6px; }
+#barMouse button { font-size: calc(var(--nbh) * .5); }
+#barNotes { grid-template-columns: repeat(10, 1fr); height: calc(var(--nbh) * .62); margin-bottom: 4px; }
+#barNotes button { font-size: calc(var(--nbh) * .3); background: #fbf6e6; color: #6b5a2a; }
+#barNotes button.note-on { background: var(--nb-note); color: #333; font-weight: 600; }
+#barValues { grid-template-columns: repeat(10, 1fr); height: var(--nbh); margin-bottom: 6px; }
+#barValues button { font-size: calc(var(--nbh) * .52); }
+.rowlabel { font-size: 10px !important; color: var(--status) !important; background: none !important; cursor: default !important; }
+#tools { width: var(--w); background: var(--bar); color: var(--bar-fg); border-radius: 0; flex: none;
+  display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: 1fr 1fr; height: calc(var(--nbh) * 1.9); }
+#tools button { background: none; border: none; color: var(--bar-fg); cursor: pointer; display: flex; align-items: center;
+  justify-content: center; font: calc(var(--nbh) * .3) var(--font); }
+#tools button:disabled { opacity: .35; cursor: default; }
+#tools button.active { color: var(--accent); }
+#tools svg { width: calc(var(--nbh) * .52); height: calc(var(--nbh) * .52); }
+#timer { grid-column: 2 / 5; font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: center; font-size: calc(var(--nbh) * .32); }
+#btnPause { grid-column: 3 / 4; }
+#tools .gap { pointer-events: none; }
+/* Dialoge */
+#overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 10; padding: 12px; }
+#overlay.on { display: flex; }
+.dlg { background: #fff; border-radius: 14px; max-width: 460px; width: 100%; max-height: 90vh; overflow: auto; padding: 18px 18px 14px; box-shadow: 0 10px 40px rgba(0,0,0,.25); -webkit-user-select: text; user-select: text; }
+.dlg h2 { margin: 0 0 10px; font-size: 18px; }
+.dlg p, .dlg li { font-size: 14px; line-height: 1.45; }
+.dlg pre { white-space: pre-wrap; font: 13px/1.45 var(--font); margin: 0; }
+.dlg textarea { width: 100%; height: 90px; font: 13px ui-monospace, Menlo, Consolas, monospace; padding: 8px; border-radius: 8px; border: 1px solid #ccc; }
+.dlg .btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+.dlg button, .menu button { font: 15px var(--font); padding: 9px 14px; border-radius: 9px; border: 1px solid #ccc; background: #f7f7f7; cursor: pointer; color: #222; }
+.dlg button.primary { background: var(--bar); color: #fff; border-color: var(--bar); }
+.menu h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #888; margin: 14px 0 6px; }
+.menu h3:first-child { margin-top: 0; }
+.menu .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.menu .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.menu .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 6px; }
+.menu .tabs button { font-size: 13px; padding: 7px 2px; }
+.menu .tabs button.on { background: var(--bar); color: var(--accent); border-color: var(--bar); }
+.menu .grid button { font-size: 13px; padding: 9px 2px; }
+.menu label { display: flex; align-items: center; gap: 8px; font-size: 15px; padding: 6px 0; }
+.menu .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.menu .seg button { font-size: 13px; padding: 7px 2px; }
+.menu .seg button.on { background: var(--bar); color: var(--accent); border-color: var(--bar); }
+#print { display: none; }
+@media print {
+  #app, #overlay { display: none !important; }
+  #print { display: block; }
+  #print h1 { font-weight: 400; font-size: 20pt; margin: 0 0 4mm; } #print p { color: #777; margin: 0 0 8mm; }
+  #print table { border-collapse: collapse; border: 3px solid #222; }
+  #print td { width: 15mm; height: 15mm; border: 1px solid #aaa; text-align: center; font-size: 24pt; padding: 0; }
+  #print td.br { border-right: 3px solid #222; } #print td.bb { border-bottom: 3px solid #222; }
+  #print td.user { color: #1f5fa8; }
+  #print .wrap { position: relative; display: inline-block; }
+  #print .wrap svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <h1 id="title">Sudoku</h1>
+    <button class="iconbtn" id="btnMenu" aria-label="Menü">
+      <svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" stroke="#333" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <canvas id="board"></canvas>
+  <div id="status"></div>
+  <div id="editbar">
+    <button id="btnRegions">Gebiete malen</button>
+    <button id="btnDiag">Diagonalen: aus</button>
+    <button id="btnCancelEdit">Abbrechen</button>
+  </div>
+  <div id="barMouse" class="bar"></div>
+  <div id="barNotes" class="bar"></div>
+  <div id="barValues" class="bar"></div>
+  <div id="tools">
+    <button id="btnPrint" title="Drucken"></button>
+    <div id="timer">00:00:00</div>
+    <button id="btnHat" title="Hilfen"></button>
+    <button id="btnUndo" title="Rückgängig (Strg+Z)"></button>
+    <button id="btnRestart" title="Neustart"></button>
+    <button id="btnPause" title="Pause / Weiter">Pause</button>
+    <button id="btnWarn" title="Fehler anzeigen"></button>
+    <button id="btnCheck" title="Lösung prüfen"></button>
+  </div>
+</div>
+<div id="overlay"></div>
+<div id="print"></div>
+<script>
+/* Sudoku-Kern: Gebietskarte, Löser, Lösungstechniken, Bewertung, Tipps,
+ * Generator und Spielzustand. JavaScript-Fassung des Python-Programms
+ * (sudoku_app/*.py) – gleiche Logik, gleiche Ergebnisse.
+ * Läuft im Browser (window.SudokuCore) und in Node (require).
+ */
+(function (root) {
+  "use strict";
+
+  // ------------------------------------------------------------ Grundlagen
+  const ALL = 0b1111111110;                      // Bits 1..9
+  const POP = new Uint8Array(1024);
+  const DIGITS_OF = [];
+  for (let m = 0; m < 1024; m++) {
+    let n = 0; const ds = [];
+    for (let d = 1; d <= 9; d++) if (m >> d & 1) { n++; ds.push(d); }
+    POP[m] = n; DIGITS_OF.push(ds);
+  }
+  const range = (n) => Array.from({ length: n }, (_, i) => i);
+  const ROW_OF = range(81).map(i => Math.floor(i / 9));
+  const COL_OF = range(81).map(i => i % 9);
+  const ROWS = range(9).map(r => range(9).map(c => r * 9 + c));
+  const COLS = range(9).map(c => range(9).map(r => r * 9 + c));
+  const CLASSIC_REGIONS = range(81).map(i => Math.floor(i / 27) * 3 + Math.floor((i % 9) / 3));
+  const DIAG_DOWN = range(9).map(r => r * 9 + r);
+  const DIAG_UP = range(9).map(r => r * 9 + 8 - r);
+  const DIAG_CELLS = new Set([...DIAG_DOWN, ...DIAG_UP]);
+  const REGION_CHARS = "123456789";
+  const LEVEL_NAMES = { 1: "Leicht", 2: "Mittel", 3: "Schwer", 4: "Sehr schwer", 5: "Extrem" };
+  const MIN_GIVENS = { 1: 36, 2: 28, 3: 24, 4: 17, 5: 17 };
+  const MAX_LEVEL = 5;
+
+  function* combinations(arr, n, start = 0, prefix = []) {
+    if (prefix.length === n) { yield prefix.slice(); return; }
+    for (let i = start; i <= arr.length - (n - prefix.length); i++) {
+      prefix.push(arr[i]);
+      yield* combinations(arr, n, i + 1, prefix);
+      prefix.pop();
+    }
+  }
+
+  function neighbours(i) {
+    const r = Math.floor(i / 9), c = i % 9, out = [];
+    if (r > 0) out.push(i - 9);
+    if (r < 8) out.push(i + 9);
+    if (c > 0) out.push(i - 1);
+    if (c < 8) out.push(i + 1);
+    return out;
+  }
+
+  // Zufallszahlen (mit Startwert reproduzierbar)
+  function makeRng(seed) {
+    let a = (seed === undefined ? Math.floor(Math.random() * 2 ** 32) : seed) >>> 0;
+    const rng = () => {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    rng.int = (n) => Math.floor(rng() * n);                 // 0..n-1
+    rng.randint = (a, b) => a + Math.floor(rng() * (b - a + 1));
+    rng.choice = (arr) => arr[Math.floor(rng() * arr.length)];
+    rng.shuffle = (arr) => {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
+    return rng;
+  }
+
+  // ------------------------------------------------------------ Gebiete
+  function normalize(regions) {
+    const map = new Map();
+    return regions.map(r => { if (!map.has(r)) map.set(r, map.size); return map.get(r); });
+  }
+
+  function regionProblems(regions) {
+    if (regions.length !== 81) return ["Die Gebietskarte muss 81 Felder haben."];
+    const problems = [];
+    const ids = [...new Set(regions)].sort((a, b) => a - b);
+    if (ids.length !== 9) problems.push(`Es gibt ${ids.length} statt 9 Gebiete.`);
+    for (const r of ids) {
+      const cells = range(81).filter(i => regions[i] === r);
+      const name = r >= 0 && r < 9 ? REGION_CHARS[r] : r;
+      if (cells.length !== 9) { problems.push(`Gebiet ${name} hat ${cells.length} statt 9 Felder.`); continue; }
+      const seen = new Set([cells[0]]), stack = [cells[0]];
+      while (stack.length) {
+        const c = stack.pop();
+        for (const n of neighbours(c)) if (regions[n] === r && !seen.has(n)) { seen.add(n); stack.push(n); }
+      }
+      if (seen.size !== 9) problems.push(`Gebiet ${name} ist nicht zusammenhängend.`);
+    }
+    return problems;
+  }
+
+  class Layout {
+    constructor(regions = null, diagonals = false) {
+      const reg = regions ? normalize(Array.from(regions)) : CLASSIC_REGIONS.slice();
+      const probs = regionProblems(reg);
+      if (probs.length) throw new Error("Ungültige Gebietskarte: " + probs.join(" "));
+      this.regionOf = reg;
+      this.regions = range(9).map(g => range(81).filter(i => reg[i] === g));
+      this.diagonals = !!diagonals;
+      this.units = [...ROWS, ...COLS, ...this.regions];
+      if (this.diagonals) this.units.push(DIAG_DOWN, DIAG_UP);
+      this.unitsOf = range(81).map(i => this.units.map((u, k) => u.includes(i) ? k : -1).filter(k => k >= 0));
+      this.sees = new Uint8Array(81 * 81);
+      this.peers = range(81).map(i => {
+        const s = new Set();
+        for (const u of this.unitsOf[i]) for (const j of this.units[u]) if (j !== i) s.add(j);
+        const arr = [...s].sort((a, b) => a - b);
+        for (const j of arr) this.sees[i * 81 + j] = 1;
+        return arr;
+      });
+      this.classicRegions = reg.every((g, i) => g === CLASSIC_REGIONS[i]);
+      this.squiggly = !this.classicRegions;
+      this.classic = this.classicRegions && !this.diagonals;
+    }
+    key() { return this.regionOf.map(g => REGION_CHARS[g]).join(""); }
+    get kind() {
+      if (this.squiggly) return this.diagonals ? "Squiggly-X" : "Squiggly";
+      return this.diagonals ? "X-Sudoku" : "Sudoku";
+    }
+    unitName(u) {
+      if (u < 9) return `Zeile ${u + 1}`;
+      if (u < 18) return `Spalte ${u - 8}`;
+      if (u < 27) return `${this.squiggly ? "Gebiet" : "Block"} ${u - 17}`;
+      return u === 27 ? "der Diagonale ↘" : "der Diagonale ↙";
+    }
+    canSee(a, b) { return this.sees[a * 81 + b] === 1; }
+    equals(o) { return o instanceof Layout && o.diagonals === this.diagonals && o.key() === this.key(); }
+  }
+  const CLASSIC = new Layout();
+
+  const cellName = (i) => `Zeile ${ROW_OF[i] + 1}, Spalte ${COL_OF[i] + 1}`;
+
+  function candidates(grid, i, layout = CLASSIC) {
+    if (grid[i]) return 0;
+    let m = ALL;
+    for (const p of layout.peers[i]) if (grid[p]) m &= ~(1 << grid[p]);
+    return m;
+  }
+
+  function conflicts(grid, layout = CLASSIC) {
+    return unitConflicts(grid, layout.units);
+  }
+  function unitConflicts(grid, units) {
+    const bad = new Set();
+    for (const unit of units) {
+      const seen = {};
+      for (const i of unit) if (grid[i]) (seen[grid[i]] = seen[grid[i]] || []).push(i);
+      for (const cells of Object.values(seen)) if (cells.length > 1) cells.forEach(c => bad.add(c));
+    }
+    return bad;
+  }
+
+  // ------------------------------------------------------------ Codes
+  function parsePuzzle(text) {
+    const cells = [...text].filter(ch => "0123456789.-_*".includes(ch));
+    if (cells.length !== 81) throw new Error(`Es wurden ${cells.length} statt 81 Felder gefunden.`);
+    return cells.map(ch => (ch >= "0" && ch <= "9") ? +ch : 0);
+  }
+  function parseRegions(text) {
+    const chars = [...text].map(c => c.toLowerCase()).filter(c => REGION_CHARS.includes(c) || "abcdefghi".includes(c));
+    if (chars.length !== 81) throw new Error(`Gebietskarte: ${chars.length} statt 81 Felder gefunden.`);
+    return chars.map(c => (c >= "1" && c <= "9") ? +c - 1 : "abcdefghi".indexOf(c));
+  }
+  function parseCode(text) {
+    let t = text.trim(), diagonals = false;
+    if (t.slice(-2).toUpperCase() === "|X") { diagonals = true; t = t.slice(0, -2); }
+    let grid = null, layout = CLASSIC;
+    const k = t.lastIndexOf("|");
+    if (k >= 0) {
+      try { grid = parsePuzzle(t.slice(0, k)); layout = new Layout(parseRegions(t.slice(k + 1))); }
+      catch (e) { grid = null; layout = CLASSIC; }
+    }
+    if (!grid) grid = parsePuzzle(t);
+    return [grid, diagonals ? new Layout(layout.regionOf, true) : layout];
+  }
+  const toString = (grid) => grid.map(v => v ? String(v) : ".").join("");
+  function toCode(grid, layout = CLASSIC) {
+    let code = toString(grid);
+    if (layout.squiggly) code += "|" + layout.key();
+    if (layout.diagonals) code += "|X";
+    return code;
+  }
+
+  // ------------------------------------------------------------ Löser
+  class SearchAborted extends Error {}
+
+  function search(grid, limit, rng = null, layout = CLASSIC, maxNodes = null) {
+    const BOX = layout.regionOf;
+    const D1 = new Int8Array(81).fill(2), D2 = new Int8Array(81).fill(2);
+    if (layout.diagonals) for (let i = 0; i < 81; i++) {
+      if (ROW_OF[i] === COL_OF[i]) D1[i] = 0;
+      if (ROW_OF[i] + COL_OF[i] === 8) D2[i] = 1;
+    }
+    const g = Array.from(grid);
+    const rows = new Int32Array(9), cols = new Int32Array(9), boxes = new Int32Array(9), diag = new Int32Array(3);
+    for (let i = 0; i < 81; i++) {
+      const v = g[i];
+      if (!v) continue;
+      const b = 1 << v, r = ROW_OF[i], c = COL_OF[i], x = BOX[i];
+      if ((rows[r] | cols[c] | boxes[x] | diag[D1[i]] | diag[D2[i]]) & b) return [0, null];
+      rows[r] |= b; cols[c] |= b; boxes[x] |= b;
+      if (D1[i] < 2) diag[0] |= b;
+      if (D2[i] < 2) diag[1] |= b;
+    }
+    const empties = range(81).filter(i => !g[i]);
+    const units = layout.units;
+    const placed = (u) => u < 9 ? rows[u] : u < 18 ? cols[u - 9] : u < 27 ? boxes[u - 18] : diag[u - 27];
+    const state = { count: 0, first: null, nodes: 0 };
+    const masks = new Int32Array(81);
+
+    function rec() {
+      if (maxNodes !== null && ++state.nodes > maxNodes) throw new SearchAborted();
+      let best = -1, bestMask = 0, bestN = 10;
+      masks.fill(0);
+      for (const i of empties) {
+        if (g[i]) continue;
+        const m = ALL & ~(rows[ROW_OF[i]] | cols[COL_OF[i]] | boxes[BOX[i]] | diag[D1[i]] | diag[D2[i]]);
+        const n = POP[m];
+        if (n === 0) return false;
+        masks[i] = m;
+        if (n < bestN) { best = i; bestMask = m; bestN = n; }
+      }
+      if (best < 0) {
+        state.count++;
+        if (state.first === null) state.first = g.slice();
+        return state.count >= limit;
+      }
+      let options = null;
+      if (bestN > 1) {
+        let pair = null;
+        for (let u = 0; u < units.length; u++) {
+          const unit = units[u];
+          let once = 0, twice = 0, thrice = 0;
+          for (const i of unit) { const m = masks[i]; thrice |= twice & m; twice |= once & m; once |= m; }
+          const missing = ALL & ~placed(u);
+          if (missing & ~once) return false;
+          const single = missing & once & ~twice;
+          if (single) {
+            const d = DIGITS_OF[single][0], bit = 1 << d;
+            options = [[unit.find(i => masks[i] & bit), d]];
+            break;
+          }
+          if (pair === null && bestN > 2) {
+            const two = missing & twice & ~thrice;
+            if (two) {
+              const d = DIGITS_OF[two][0], bit = 1 << d;
+              pair = unit.filter(i => masks[i] & bit).map(i => [i, d]);
+            }
+          }
+        }
+        if (options === null && pair !== null) options = pair;
+      }
+      if (options === null) {
+        let digits = DIGITS_OF[bestMask];
+        if (rng) digits = rng.shuffle(digits.slice());
+        options = digits.map(d => [best, d]);
+      } else if (rng && options.length > 1) {
+        options = rng.shuffle(options.slice());
+      }
+      for (const [cell, d] of options) {
+        const b = 1 << d, r = ROW_OF[cell], c = COL_OF[cell], x = BOX[cell];
+        if ((rows[r] | cols[c] | boxes[x] | diag[D1[cell]] | diag[D2[cell]]) & b) continue;
+        const d1 = D1[cell], d2 = D2[cell];
+        g[cell] = d; rows[r] |= b; cols[c] |= b; boxes[x] |= b;
+        if (d1 < 2) diag[0] |= b;
+        if (d2 < 2) diag[1] |= b;
+        const stop = rec();
+        g[cell] = 0; rows[r] ^= b; cols[c] ^= b; boxes[x] ^= b;
+        if (d1 < 2) diag[0] ^= b;
+        if (d2 < 2) diag[1] ^= b;
+        if (stop) return true;
+      }
+      return false;
+    }
+    rec();
+    return [state.count, state.first];
+  }
+
+  const solve = (grid, layout = CLASSIC) => search(grid, 1, null, layout)[1];
+  const countSolutions = (grid, limit = 2, layout = CLASSIC) => search(grid, limit, null, layout)[0];
+  function randomSolution(rng = makeRng(), layout = CLASSIC, maxNodes = null) {
+    try { return search(new Array(81).fill(0), 1, rng, layout, maxNodes)[1]; }
+    catch (e) { if (e instanceof SearchAborted) return null; throw e; }
+  }
+
+  // ------------------------------------------------------------ Logischer Löser
+  class LogicSolver {
+    constructor(grid, layout = CLASSIC) {
+      this.L = layout;
+      this.values = Array.from(grid);
+      this.cand = new Array(81).fill(0);
+      for (let i = 0; i < 81; i++) if (!this.values[i]) {
+        let m = ALL;
+        for (const p of layout.peers[i]) if (this.values[p]) m &= ~(1 << this.values[p]);
+        this.cand[i] = m;
+      }
+    }
+    place(i, d) {
+      this.values[i] = d; this.cand[i] = 0;
+      const b = ~(1 << d);
+      for (const p of this.L.peers[i]) this.cand[p] &= b;
+    }
+    solved() { return this.values.every(v => v); }
+    broken() { return this.values.some((v, i) => !v && !this.cand[i]); }
+    _elim(cells, mask) {
+      let changed = false;
+      for (const i of cells) if (this.cand[i] & mask) { this.cand[i] &= ~mask; changed = true; }
+      return changed;
+    }
+    sees(a, b) { return this.L.canSee(a, b); }
+
+    findNakedSingle() {
+      for (let i = 0; i < 81; i++) if (!this.values[i] && POP[this.cand[i]] === 1) return [i, DIGITS_OF[this.cand[i]][0]];
+      return null;
+    }
+    findHiddenSingle() {
+      const units = this.L.units;
+      for (let u = 0; u < units.length; u++) for (let d = 1; d <= 9; d++) {
+        const b = 1 << d;
+        let pos = -1, n = 0;
+        for (const i of units[u]) if (this.cand[i] & b) { n++; pos = i; if (n > 1) break; }
+        if (n === 1) return [pos, d, u];
+      }
+      return null;
+    }
+    nakedSingle() { const r = this.findNakedSingle(); if (r) { this.place(r[0], r[1]); return true; } return false; }
+    hiddenSingle() { const r = this.findHiddenSingle(); if (r) { this.place(r[0], r[1]); return true; } return false; }
+
+    lockedCandidates() {
+      const units = this.L.units;
+      for (let u = 0; u < units.length; u++) {
+        const unit = units[u];
+        for (let d = 1; d <= 9; d++) {
+          const bit = 1 << d;
+          const pos = unit.filter(i => this.cand[i] & bit);
+          if (pos.length < 2) continue;
+          for (const other of this.L.unitsOf[pos[0]]) {
+            if (other === u) continue;
+            const target = units[other];
+            if (pos.every(i => target.includes(i))) {
+              const rest = target.filter(i => !unit.includes(i));
+              if (this._elim(rest, bit)) return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+    nakedSubset(n) {
+      for (const unit of this.L.units) {
+        const empties = unit.filter(i => !this.values[i]);
+        if (empties.length <= n) continue;
+        for (const combo of combinations(empties, n)) {
+          let union = 0;
+          for (const i of combo) union |= this.cand[i];
+          if (POP[union] === n) {
+            const rest = empties.filter(i => !combo.includes(i));
+            if (this._elim(rest, union)) return true;
+          }
+        }
+      }
+      return false;
+    }
+    hiddenSubset(n) {
+      for (const unit of this.L.units) {
+        const placed = new Set(unit.filter(i => this.values[i]).map(i => this.values[i]));
+        const open = range(9).map(k => k + 1).filter(d => !placed.has(d));
+        if (open.length <= n) continue;
+        for (const digits of combinations(open, n)) {
+          let mask = 0;
+          for (const d of digits) mask |= 1 << d;
+          const cells = unit.filter(i => this.cand[i] & mask);
+          if (cells.length !== n) continue;
+          if (digits.some(d => !cells.some(i => this.cand[i] & (1 << d)))) continue;
+          let changed = false;
+          for (const i of cells) if (this.cand[i] & ~mask) { this.cand[i] &= mask; changed = true; }
+          if (changed) return true;
+        }
+      }
+      return false;
+    }
+    fish(n) {
+      for (let d = 1; d <= 9; d++) {
+        const bit = 1 << d;
+        for (const [lines, cross] of [[ROWS, COLS], [COLS, ROWS]]) {
+          const candLines = [];
+          lines.forEach((line, k) => {
+            const pos = [];
+            line.forEach((i, j) => { if (this.cand[i] & bit) pos.push(j); });
+            if (pos.length >= 2 && pos.length <= n) candLines.push([k, pos]);
+          });
+          if (candLines.length < n) continue;
+          for (const combo of combinations(candLines, n)) {
+            const union = new Set();
+            for (const [, pos] of combo) pos.forEach(j => union.add(j));
+            if (union.size !== n) continue;
+            const ks = new Set(combo.map(([k]) => k));
+            let changed = false;
+            for (const j of union) {
+              const others = cross[j].filter((i, k) => !ks.has(k));
+              if (this._elim(others, bit)) changed = true;
+            }
+            if (changed) return true;
+          }
+        }
+      }
+      return false;
+    }
+    xyWing() {
+      const biv = range(81).filter(i => !this.values[i] && POP[this.cand[i]] === 2);
+      const bset = new Set(biv);
+      for (const pivot of biv) {
+        const pm = this.cand[pivot];
+        const wings = this.L.peers[pivot].filter(i => bset.has(i) && POP[this.cand[i] & pm] === 1);
+        for (const [a, b] of combinations(wings, 2)) {
+          const ma = this.cand[a], mb = this.cand[b];
+          if ((ma & pm) === (mb & pm)) continue;
+          const z = ma & mb & ~pm;
+          if (POP[z & 1023] !== 1 || ((ma | mb) & ~pm) !== z) continue;
+          const targets = range(81).filter(i => i !== a && i !== b && i !== pivot && this.sees(i, a) && this.sees(i, b));
+          if (this._elim(targets, z)) return true;
+        }
+      }
+      return false;
+    }
+    xyzWing() {
+      for (let pivot = 0; pivot < 81; pivot++) {
+        const pm = this.cand[pivot];
+        if (this.values[pivot] || POP[pm] !== 3) continue;
+        const wings = this.L.peers[pivot].filter(i => !this.values[i] && POP[this.cand[i]] === 2 && (this.cand[i] & ~pm) === 0);
+        for (const [a, b] of combinations(wings, 2)) {
+          const ma = this.cand[a], mb = this.cand[b];
+          if (ma === mb || (ma | mb) !== pm) continue;
+          const z = ma & mb;
+          const targets = range(81).filter(i => i !== a && i !== b && i !== pivot &&
+            this.sees(i, a) && this.sees(i, b) && this.sees(i, pivot));
+          if (this._elim(targets, z)) return true;
+        }
+      }
+      return false;
+    }
+    _strongLinks(bit) {
+      const adj = new Map();
+      for (const unit of this.L.units) {
+        const pos = unit.filter(i => this.cand[i] & bit);
+        if (pos.length === 2) {
+          const [a, b] = pos;
+          if (!adj.has(a)) adj.set(a, new Set());
+          if (!adj.has(b)) adj.set(b, new Set());
+          adj.get(a).add(b); adj.get(b).add(a);
+        }
+      }
+      return adj;
+    }
+    simpleColoring() {
+      for (let d = 1; d <= 9; d++) {
+        const bit = 1 << d;
+        const adj = this._strongLinks(bit);
+        const done = new Set();
+        for (const start of adj.keys()) {
+          if (done.has(start)) continue;
+          const color = new Map([[start, 0]]);
+          const stack = [start];
+          while (stack.length) {
+            const c = stack.pop();
+            for (const n of [...adj.get(c)].sort((x, y) => x - y)) {
+              if (!color.has(n)) { color.set(n, 1 - color.get(c)); stack.push(n); }
+            }
+          }
+          for (const k of color.keys()) done.add(k);
+          if (color.size < 3) continue;
+          const groups = [0, 1].map(k => [...color.entries()].filter(([, v]) => v === k).map(([c]) => c));
+          for (const g of groups) {
+            let clash = false;
+            for (const [a, b] of combinations(g, 2)) if (this.sees(a, b)) { clash = true; break; }
+            if (clash && this._elim(g, bit)) return true;
+          }
+          const targets = range(81).filter(i => (this.cand[i] & bit) && !color.has(i) &&
+            groups[0].some(a => this.sees(i, a)) && groups[1].some(b => this.sees(i, b)));
+          if (this._elim(targets, bit)) return true;
+        }
+      }
+      return false;
+    }
+    wWing() {
+      const biv = range(81).filter(i => !this.values[i] && POP[this.cand[i]] === 2);
+      for (const [a, b] of combinations(biv, 2)) {
+        if (this.cand[a] !== this.cand[b] || this.sees(a, b)) continue;
+        const [x, y] = DIGITS_OF[this.cand[a]];
+        for (const [link, elim] of [[x, y], [y, x]]) {
+          const lb = 1 << link;
+          for (const unit of this.L.units) {
+            const pos = unit.filter(i => this.cand[i] & lb);
+            if (pos.length !== 2 || pos.includes(a) || pos.includes(b)) continue;
+            const [p, q] = pos;
+            if ((this.sees(p, a) && this.sees(q, b)) || (this.sees(p, b) && this.sees(q, a))) {
+              const targets = range(81).filter(i => i !== a && i !== b && this.sees(i, a) && this.sees(i, b));
+              if (this._elim(targets, 1 << elim)) return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+    xyChain(maxLen = 14) {
+      const biv = range(81).filter(i => !this.values[i] && POP[this.cand[i]] === 2);
+      const bset = new Set(biv);
+      for (const start of biv) {
+        for (const z of DIGITS_OF[this.cand[start]]) {
+          const zb = 1 << z;
+          const first = DIGITS_OF[this.cand[start] & ~zb][0];
+          let frontier = [[start, first]];
+          const seen = new Set([start * 10 + first]);
+          for (let step = 0; step < maxLen; step++) {
+            const next = [];
+            for (const [cell, val] of frontier) {
+              const vb = 1 << val;
+              for (const n of this.L.peers[cell]) {
+                if (bset.has(n) && (this.cand[n] & vb)) {
+                  const forced = DIGITS_OF[this.cand[n] & ~vb][0];
+                  if (seen.has(n * 10 + forced)) continue;
+                  seen.add(n * 10 + forced);
+                  if (forced === z && n !== start) {
+                    const targets = range(81).filter(i => i !== start && i !== n && this.sees(i, start) && this.sees(i, n));
+                    if (this._elim(targets, zb)) return true;
+                  }
+                  next.push([n, forced]);
+                }
+              }
+            }
+            frontier = next;
+            if (!frontier.length) break;
+          }
+        }
+      }
+      return false;
+    }
+    xChain(maxLen = 12) {
+      for (let d = 1; d <= 9; d++) {
+        const bit = 1 << d;
+        const strong = this._strongLinks(bit);
+        const cells = range(81).filter(i => this.cand[i] & bit);
+        for (const start of strong.keys()) {
+          let frontier = [start];
+          const seenFalse = new Set([start]), seenTrue = new Set();
+          for (let step = 0; step < maxLen; step++) {
+            const trues = [];
+            for (const c of frontier) {
+              const links = strong.has(c) ? [...strong.get(c)].sort((x, y) => x - y) : [];
+              for (const t of links) {
+                if (seenTrue.has(t)) continue;
+                seenTrue.add(t); trues.push(t);
+                if (t !== start) {
+                  const targets = cells.filter(i => i !== start && i !== t && this.sees(i, start) && this.sees(i, t));
+                  if (this._elim(targets, bit)) return true;
+                }
+              }
+            }
+            frontier = [];
+            for (const t of trues) for (const f of this.L.peers[t]) {
+              if ((this.cand[f] & bit) && !seenFalse.has(f)) { seenFalse.add(f); frontier.push(f); }
+            }
+            if (!frontier.length) break;
+          }
+        }
+      }
+      return false;
+    }
+    leftovers() {
+      if (!this.L.squiggly) return false;
+      for (const [a, b] of leftoverPairs(this.L)) {
+        for (const [x, y] of [[a, b], [b, a]]) {
+          let allowed = 0;
+          for (const i of y) allowed |= this.cand[i] | (this.values[i] ? 1 << this.values[i] : 0);
+          for (const i of x) {
+            if (!this.values[i] && (this.cand[i] & ~allowed)) { this.cand[i] &= allowed; return true; }
+          }
+        }
+      }
+      return false;
+    }
+  }
+
+  function leftoverPairs(layout) {
+    if (layout._leftovers) return layout._leftovers;
+    const pairs = [], seen = new Set();
+    for (const lines of [ROWS, COLS]) {
+      for (let k = 1; k <= 4; k++) for (let start = 0; start < 10 - k; start++) {
+        const band = new Set();
+        lines.slice(start, start + k).forEach(line => line.forEach(i => band.add(i)));
+        const overlap = (g) => layout.regions[g].filter(i => band.has(i)).length;
+        const order = range(9).sort((g1, g2) => overlap(g2) - overlap(g1));   // stabil wie Python
+        const regs = new Set();
+        order.slice(0, k).forEach(g => layout.regions[g].forEach(i => regs.add(i)));
+        const a = [...band].filter(i => !regs.has(i)).sort((x, y) => x - y);
+        const b = [...regs].filter(i => !band.has(i)).sort((x, y) => x - y);
+        const key = a.join(",") + "|" + b.join(",");
+        if (a.length && a.length <= 4 && !seen.has(key)) { seen.add(key); pairs.push([a, b]); }
+      }
+    }
+    layout._leftovers = pairs;
+    return pairs;
+  }
+
+  const TECHNIQUES = [
+    ["Nackter Einzelner", 1, s => s.nakedSingle()],
+    ["Versteckter Einzelner", 1, s => s.hiddenSingle()],
+    ["Block-Linien-Interaktion", 2, s => s.lockedCandidates()],
+    ["Gesetz der Überbleibsel", 2, s => s.leftovers()],
+    ["Nacktes Paar", 2, s => s.nakedSubset(2)],
+    ["Verstecktes Paar", 2, s => s.hiddenSubset(2)],
+    ["Nacktes Tripel", 3, s => s.nakedSubset(3)],
+    ["Verstecktes Tripel", 3, s => s.hiddenSubset(3)],
+    ["X-Wing", 3, s => s.fish(2)],
+    ["XY-Wing", 3, s => s.xyWing()],
+    ["XYZ-Wing", 3, s => s.xyzWing()],
+    ["Swordfish", 3, s => s.fish(3)],
+    ["Nacktes Quadrupel", 4, s => s.nakedSubset(4)],
+    ["Verstecktes Quadrupel", 4, s => s.hiddenSubset(4)],
+    ["Jellyfish", 4, s => s.fish(4)],
+    ["Einfache Färbung", 4, s => s.simpleColoring()],
+    ["W-Wing", 4, s => s.wWing()],
+    ["X-Kette", 4, s => s.xChain()],
+    ["XY-Kette", 4, s => s.xyChain()],
+  ];
+
+  function rateDetails(grid, maxLevel = MAX_LEVEL, layout = CLASSIC) {
+    const s = new LogicSolver(grid, layout);
+    let level = 1;
+    const used = {};
+    while (!s.solved()) {
+      if (s.broken()) return [MAX_LEVEL, used];
+      let progressed = false;
+      for (const [name, lvl, fn] of TECHNIQUES) {
+        if (lvl > maxLevel) return [maxLevel + 1, used];
+        if (fn(s)) { level = Math.max(level, lvl); used[name] = (used[name] || 0) + 1; progressed = true; break; }
+      }
+      if (!progressed) return [MAX_LEVEL, used];
+    }
+    return [level, used];
+  }
+  const rate = (grid, maxLevel = MAX_LEVEL, layout = CLASSIC) => rateDetails(grid, maxLevel, layout)[0];
+
+  function findHint(grid, layout = CLASSIC) {
+    const s = new LogicSolver(grid, layout);
+    if (s.broken()) return null;
+    const used = [];
+    for (let k = 0; k < 300; k++) {
+      const prefix = used.length ? `Nach Ausschlüssen (${[...new Set(used)].join(", ")}) gilt: ` : "";
+      let r = s.findNakedSingle();
+      if (r) return { cell: r[0], digit: r[1], text: `${prefix}In ${cellName(r[0])} ist nur noch die ${r[1]} möglich.`, techniques: used };
+      r = s.findHiddenSingle();
+      if (r) return { cell: r[0], digit: r[1], text: `${prefix}Die ${r[1]} passt in ${layout.unitName(r[2])} nur in dieses Feld (${cellName(r[0])}).`, techniques: used };
+      let progressed = false;
+      for (const [name, , fn] of TECHNIQUES.slice(2)) if (fn(s)) { used.push(name); progressed = true; break; }
+      if (!progressed) return null;
+    }
+    return null;
+  }
+
+  // ------------------------------------------------------------ Generator
+  function connected(cells) {
+    if (!cells.size) return true;
+    const start = cells.values().next().value;
+    const seen = new Set([start]), stack = [start];
+    while (stack.length) {
+      const c = stack.pop();
+      for (const n of neighbours(c)) if (cells.has(n) && !seen.has(n)) { seen.add(n); stack.push(n); }
+    }
+    return seen.size === cells.size;
+  }
+
+  function randomRegions(rng, solution, target = null) {
+    target = target || rng.randint(16, 28);
+    const reg = CLASSIC_REGIONS.slice();
+    const members = range(9).map(g => new Set(range(81).filter(i => reg[i] === g)));
+    const where = new Map();
+    for (let i = 0; i < 81; i++) where.set(reg[i] * 10 + solution[i], i);
+    let moved = 0, tries = 0;
+    while (moved < target && tries < 20000) {
+      tries++;
+      const a = rng.int(81), ra = reg[a];
+      const nb = neighbours(a).filter(n => reg[n] !== ra);
+      if (!nb.length) continue;
+      const rb = reg[rng.choice(nb)];
+      const b = where.get(rb * 10 + solution[a]);
+      if (rb === CLASSIC_REGIONS[a] || ra === CLASSIC_REGIONS[b]) continue;
+      if (!neighbours(b).some(n => reg[n] === ra && n !== a)) continue;
+      const newA = new Set(members[ra]); newA.delete(a); newA.add(b);
+      const newB = new Set(members[rb]); newB.delete(b); newB.add(a);
+      if (!connected(newA) || !connected(newB)) continue;
+      members[ra] = newA; members[rb] = newB;
+      reg[a] = rb; reg[b] = ra;
+      where.set(ra * 10 + solution[a], b); where.set(rb * 10 + solution[a], a);
+      moved = reg.filter((g, i) => g !== CLASSIC_REGIONS[i]).length;
+    }
+    return reg;
+  }
+
+  function acceptable(reg) {
+    const groups = range(9).map(g => range(81).filter(i => reg[i] === g));
+    const lines = [...ROWS, ...COLS].map(u => u.join(","));
+    if (groups.some(g => lines.includes(g.join(",")))) return false;
+    const acrossRows = groups.some(g => new Set(g.map(i => Math.floor(i / 27))).size > 1);
+    const acrossCols = groups.some(g => new Set(g.map(i => Math.floor((i % 9) / 3))).size > 1);
+    return acrossRows && acrossCols;
+  }
+
+  function randomLayout(rng, diagonals = false) {
+    const base = new Layout(null, diagonals);
+    for (;;) {
+      const solution = randomSolution(rng, base);
+      const reg = randomRegions(rng, solution);
+      if (acceptable(reg)) return [new Layout(reg, diagonals), solution];
+    }
+  }
+
+  function dig(solution, level, rng, layout = CLASSIC) {
+    const puzzle = solution.slice();
+    let givens = 81;
+    const order = rng.shuffle(range(41));
+    for (const i of order) {
+      const cells = [...new Set([i, 80 - i])];
+      if (givens - cells.length < MIN_GIVENS[level]) continue;
+      const backup = cells.map(c => puzzle[c]);
+      cells.forEach(c => { puzzle[c] = 0; });
+      let ok = countSolutions(puzzle, 2, layout) === 1;
+      if (ok && level < MAX_LEVEL) ok = rate(puzzle, level, layout) <= level;
+      if (ok) givens -= cells.length;
+      else cells.forEach((c, k) => { puzzle[c] = backup[k]; });
+    }
+    return puzzle;
+  }
+
+  function generate(level = 2, { rng = makeRng(), timeout = 20000, squiggly = false, diagonals = false } = {}) {
+    const start = Date.now();
+    let best = null;
+    for (;;) {
+      let layout, solution;
+      if (squiggly) [layout, solution] = randomLayout(rng, diagonals);
+      else { layout = diagonals ? new Layout(null, true) : CLASSIC; solution = randomSolution(rng, layout); }
+      const puzzle = dig(solution, level, rng, layout);
+      const actual = rate(puzzle, MAX_LEVEL, layout);
+      if (actual === level) return { puzzle, solution, level: actual, layout };
+      if (!best || Math.abs(actual - level) < Math.abs(best.level - level)) best = { puzzle, solution, level: actual, layout };
+      if (Date.now() - start > timeout) return best;
+    }
+  }
+
+  // ------------------------------------------------------------ Spielzustand
+  const SAVE_VERSION = 2;
+
+  class Game {
+    constructor() { this._init(); }
+    _init() {
+      this.givens = new Array(81).fill(false);
+      this.values = new Array(81).fill(0);
+      this.notes = new Array(81).fill(0);
+      this.solution = null;
+      this.level = null;
+      this.elapsed = 0;
+      this.finished = false;
+      this.revealed = false;
+      this.editing = false;
+      this.layout = CLASSIC;
+      this.editRegions = null;
+      this.editDiagonals = false;
+      this._undo = []; this._redo = [];
+      this._editBackup = null;
+    }
+    loadPuzzle(puzzle, solution = null, level = null, layout = null) {
+      this._init();
+      this.layout = layout || CLASSIC;
+      this.values = Array.from(puzzle);
+      this.givens = puzzle.map(v => v !== 0);
+      this.solution = solution ? Array.from(solution) : solve(puzzle, this.layout);
+      this.level = level !== null && level !== undefined ? level : rate(puzzle, MAX_LEVEL, this.layout);
+    }
+    get squiggly() {
+      if (this.editing && this.editRegions) return !this.editRegions.every((g, i) => g === CLASSIC_REGIONS[i]);
+      return this.layout.squiggly;
+    }
+    get diagonals() { return this.editing ? this.editDiagonals : this.layout.diagonals; }
+    kind() {
+      if (this.squiggly) return this.diagonals ? "Squiggly-X" : "Squiggly";
+      return this.diagonals ? "X-Sudoku" : "Sudoku";
+    }
+    regionMap() { return this.editing && this.editRegions ? this.editRegions : this.layout.regionOf; }
+    activeLayout() {
+      if (this.editing) {
+        const regions = this.editRegions || CLASSIC_REGIONS;
+        if (regionProblems(regions).length) return null;
+        return new Layout(regions, this.editDiagonals);
+      }
+      return this.layout;
+    }
+    puzzle() { return this.values.map((v, i) => this.givens[i] ? v : 0); }
+
+    _commit(changes) {   // changes: Map(index -> [wert, notizen])
+      const rec = [];
+      for (const [i, [v, n]] of changes) {
+        if (this.values[i] !== v || this.notes[i] !== n) {
+          rec.push([i, [this.values[i], this.notes[i]], [v, n]]);
+          this.values[i] = v; this.notes[i] = n;
+        }
+      }
+      if (rec.length) { this._undo.push(rec); this._redo = []; }
+      return rec.length > 0;
+    }
+    _apply(rec, which) { for (const [i, oldV, newV] of rec) [this.values[i], this.notes[i]] = which === 0 ? oldV : newV; }
+    undo() { if (!this._undo.length || this.finished) return false; const r = this._undo.pop(); this._apply(r, 0); this._redo.push(r); return true; }
+    redo() { if (!this._redo.length || this.finished) return false; const r = this._redo.pop(); this._apply(r, 1); this._undo.push(r); return true; }
+    canEdit(i) { return !this.finished && !this.givens[i]; }
+
+    setValue(i, d) {
+      if (!this.canEdit(i)) return false;
+      const nv = this.values[i] === d ? 0 : d;
+      const changes = new Map([[i, [nv, 0]]]);
+      if (nv && !this.editing) {
+        const bit = 1 << nv;
+        for (const p of this.layout.peers[i]) if (this.notes[p] & bit) changes.set(p, [this.values[p], this.notes[p] & ~bit]);
+      }
+      return this._commit(changes);
+    }
+    toggleNote(i, d) {
+      if (!this.canEdit(i) || this.values[i] || this.editing) return false;
+      return this._commit(new Map([[i, [0, this.notes[i] ^ (1 << d)]]]));
+    }
+    clearCell(i) { if (!this.canEdit(i)) return false; return this._commit(new Map([[i, [0, 0]]])); }
+    fillCandidates() {
+      const ch = new Map();
+      for (let i = 0; i < 81; i++) if (!this.values[i]) ch.set(i, [0, candidates(this.values, i, this.layout)]);
+      return this._commit(ch);
+    }
+    clearNotes() {
+      const ch = new Map();
+      for (let i = 0; i < 81; i++) if (this.notes[i]) ch.set(i, [this.values[i], 0]);
+      return this._commit(ch);
+    }
+    reveal(i) {
+      if (!this.canEdit(i) || !this.solution) return false;
+      const d = this.solution[i], bit = 1 << d;
+      const ch = new Map([[i, [d, 0]]]);
+      for (const p of this.layout.peers[i]) if (this.notes[p] & bit) ch.set(p, [this.values[p], this.notes[p] & ~bit]);
+      return this._commit(ch);
+    }
+    showSolution() {
+      if (!this.solution) return false;
+      const ch = new Map();
+      for (let i = 0; i < 81; i++) ch.set(i, [this.solution[i], 0]);
+      this._commit(ch);
+      this.finished = true; this.revealed = true;
+      return true;
+    }
+    reset() {
+      for (let i = 0; i < 81; i++) { if (!this.givens[i]) this.values[i] = 0; this.notes[i] = 0; }
+      this._undo = []; this._redo = [];
+      this.elapsed = 0; this.finished = false; this.revealed = false;
+    }
+    conflicts() {
+      const layout = this.activeLayout();
+      if (!layout) return unitConflicts(this.values, [...ROWS, ...COLS, ...(this.editDiagonals ? [DIAG_DOWN, DIAG_UP] : [])]);
+      return conflicts(this.values, layout);
+    }
+    wrongCells() {
+      const s = new Set();
+      if (!this.solution) return s;
+      for (let i = 0; i < 81; i++) if (this.values[i] && !this.givens[i] && this.values[i] !== this.solution[i]) s.add(i);
+      return s;
+    }
+    emptyCount() { return this.values.filter(v => !v).length; }
+    isSolved() {
+      if (!this.values.every(v => v)) return false;
+      if (this.solution) return this.values.every((v, i) => v === this.solution[i]);
+      return this.conflicts().size === 0;
+    }
+    digitCount(d) { return this.values.filter(v => v === d).length; }
+    hasProgress() { return this.values.some((v, i) => v && !this.givens[i]) || this.notes.some(n => n); }
+
+    startEditing(prefill = null, regions = null, squiggly = false, diagonals = false) {
+      const backup = this.givens.some(g => g) ? this.toDict() : null;
+      this._init();
+      this._editBackup = backup;
+      if (prefill) this.values = Array.from(prefill);
+      const nonClassic = regions && !regions.every((g, i) => g === CLASSIC_REGIONS[i]);
+      if (squiggly || nonClassic) this.editRegions = regions ? Array.from(regions) : CLASSIC_REGIONS.slice();
+      this.editDiagonals = !!diagonals;
+      this.editing = true;
+    }
+    setDiagonals(on) { if (!this.editing) return false; this.editDiagonals = !!on; return true; }
+    setRegion(i, region) {
+      if (!this.editing || !this.editRegions || this.editRegions[i] === region) return false;
+      this.editRegions[i] = region; return true;
+    }
+    regionSizes() { const reg = this.regionMap(); return range(9).map(r => reg.filter(g => g === r).length); }
+    cancelEditing() { const b = this._editBackup; if (b) this.fromDict(b); else this._init(); }
+    finishEditing() {
+      const grid = Array.from(this.values);
+      const n = grid.filter(v => v).length;
+      let layout = new Layout(null, this.editDiagonals);
+      if (this.editRegions) {
+        const problems = regionProblems(this.editRegions);
+        if (problems.length) return ["regions", problems];
+        layout = new Layout(this.editRegions, this.editDiagonals);
+      }
+      if (this.conflicts().size) return ["conflict", n];
+      if (n < 17) return ["few", n];
+      const sols = countSolutions(grid, 2, layout);
+      if (sols === 0) return ["none", n];
+      if (sols > 1) return ["multiple", n];
+      this.loadPuzzle(grid, null, null, layout);
+      return ["ok", n];
+    }
+    toDict() {
+      return {
+        version: SAVE_VERSION, puzzle: toString(this.puzzle()), values: toString(this.values),
+        notes: Array.from(this.notes), level: this.level, elapsed: Math.round(this.elapsed * 10) / 10,
+        finished: this.finished, revealed: this.revealed,
+        regions: this.layout.squiggly ? this.layout.key() : null, diagonals: this.layout.diagonals,
+      };
+    }
+    fromDict(data) {
+      const puzzle = parsePuzzle(data.puzzle);
+      const values = parsePuzzle(data.values || data.puzzle);
+      const notes = data.notes || new Array(81).fill(0);
+      if (notes.length !== 81) throw new Error("Notizen unvollständig");
+      const layout = new Layout(data.regions ? parseRegions(data.regions) : null, !!data.diagonals);
+      if (countSolutions(puzzle, 2, layout) !== 1) throw new Error("Das gespeicherte Rätsel ist nicht eindeutig lösbar.");
+      this.loadPuzzle(puzzle, null, data.level ?? null, layout);
+      for (let i = 0; i < 81; i++) {
+        if (!this.givens[i]) this.values[i] = values[i];
+        this.notes[i] = (notes[i] | 0) & 0x3FE;
+      }
+      this.elapsed = +(data.elapsed || 0);
+      this.finished = !!data.finished; this.revealed = !!data.revealed;
+    }
+  }
+
+  const api = {
+    ALL, POP, DIGITS_OF, ROWS, COLS, ROW_OF, COL_OF, CLASSIC_REGIONS, DIAG_DOWN, DIAG_UP, DIAG_CELLS,
+    LEVEL_NAMES, MAX_LEVEL, TECHNIQUES, Layout, CLASSIC, Game, LogicSolver,
+    makeRng, regionProblems, normalize, cellName, candidates, conflicts,
+    parsePuzzle, parseRegions, parseCode, toString, toCode,
+    solve, countSolutions, randomSolution, rate, rateDetails, findHint, leftoverPairs,
+    randomRegions, randomLayout, generate,
+  };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.SudokuCore = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+/* Sudoku – Web-Oberfläche. Raster auf einem Canvas (wie die PC-Version),
+ * Zahlenleisten und Werkzeugleiste als Schaltflächen.
+ *
+ * Bedienung:
+ *  Maus (PC, iPad mit Trackpad): Feld überfahren -> alle 9 Ziffern erscheinen,
+ *    Klick = Notiz, Doppelklick = Zahl, Rechtsklick = Notiz; eine Zahlenleiste
+ *    mit Notizmodus-Schalter.
+ *  Finger (iPhone, iPad, Android): Feld antippen, dann Ziffer in der kleinen
+ *    Notiz-Reihe (oben) oder der großen Zahlen-Reihe (unten) tippen.
+ *  Die Art wird automatisch am Eingabegerät erkannt (Ansicht -> Bedienung).
+ */
+(function () {
+  "use strict";
+  const C = window.SudokuCore;
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------------------------------------------------------- Farben
+  const COL = {
+    bg: "#ffffff", thin: "#c9c9c9", thick: "#2b2b2b", given: "#4a4a4a", user: "#1f5fa8",
+    note: "#3a3a3a", noteHl: "#1f5fa8", selected: "#d9d9d9", same: "#e4ecf7", error: "#c62828",
+    errorBg: "#fdecea", hint: "#ff9800", overlay: "#f4f4f4", status: "#555555",
+    hoverBox: "#111111", hoverDim: "#8c8c8c", unsure: "#ffd8a8", diag: "#e9e9e9", diagLine: "#a9bcd8",
+  };
+  const REGION_COLORS = ["#fde2e4", "#dcefd0", "#d9e8fb", "#fff0bf", "#eadcfb",
+    "#cdeee8", "#ffdcc2", "#e4e7ec", "#f7d6ea"];
+  const NOTE_POS = [0.19, 0.5, 0.81];
+  const FONT = getComputedStyle(document.documentElement).getPropertyValue("--font") || "sans-serif";
+  const LEVELS = C.LEVEL_NAMES;
+  const VARIANTS = [["Klassisch", false, false], ["Squiggly", true, false], ["X-Sudoku", false, true], ["Squiggly-X", true, true]];
+
+  function darker(hex, f = 0.9) {
+    const n = (k) => Math.floor(parseInt(hex.slice(k, k + 2), 16) * f);
+    return "#" + [n(1), n(3), n(5)].map(v => v.toString(16).padStart(2, "0")).join("");
+  }
+  const fmtTime = (sec) => {
+    sec = Math.floor(sec);
+    const p = (n) => String(n).padStart(2, "0");
+    return `${p(Math.floor(sec / 3600))}:${p(Math.floor(sec % 3600 / 60))}:${p(sec % 60)}`;
+  };
+
+  // ---------------------------------------------------------------- Speicher
+  const KEY_SAVE = "sudoku.autosave", KEY_SET = "sudoku.settings";
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* privat/voll */ } },
+  };
+  const settings = Object.assign({ colored: true, diagStyle: "shade", input: "auto", lastVariant: 0 },
+    store.get(KEY_SET) || {});
+  const saveSettings = () => store.set(KEY_SET, settings);
+
+  // ---------------------------------------------------------------- Zustand
+  const S = {
+    game: new C.Game(), selected: null, hover: null, clickNote: null, noteMode: false,
+    showErrors: false, paused: false, generating: false, hintCell: null, statusMsg: "",
+    regionMode: false, paintRegion: 0, painting: false, unsure: new Set(),
+    input: "mouse", lastTick: performance.now(), cell: 40, genKind: "Rätsel",
+  };
+  const canvas = $("board"), ctx = canvas.getContext("2d");
+
+  function detectInput() {
+    if (settings.input !== "auto") return settings.input;
+    return window.matchMedia("(hover: hover) and (pointer: fine)").matches ? "mouse" : "touch";
+  }
+  S.input = detectInput();
+  function setInputFrom(pointerType) {
+    if (settings.input !== "auto") return;
+    const want = pointerType === "mouse" ? "mouse" : "touch";
+    if (want !== S.input) { S.input = want; S.hover = null; layout(); render(); }
+  }
+
+  // ---------------------------------------------------------------- Layout
+  function layout() {
+    const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    const editH = S.game.editing ? 44 : 0;
+    const k = S.input === "touch" && !S.regionMode && !S.game.editing ? 0.62 + 1 + 1.9 : 1 + 1.9;
+    const fixed = 44 + 26 + editH + 30;
+    let s = Math.min((vw - 12) / 9, 72);
+    s = Math.min(s, (vh - fixed) / (9 + 0.95 * k));
+    s = Math.max(24, Math.floor(s));
+    const nbh = Math.round(Math.max(34, Math.min(62, s * 0.95)));
+    S.cell = s;
+    const w = 9 * s;
+    document.documentElement.style.setProperty("--w", w + "px");
+    document.documentElement.style.setProperty("--nbh", nbh + "px");
+    const dpr = window.devicePixelRatio || 1;
+    canvas.style.width = canvas.style.height = w + "px";
+    canvas.width = canvas.height = Math.round(w * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const touch = S.input === "touch";
+    $("barMouse").style.display = touch ? "none" : "grid";
+    $("barNotes").style.display = touch && !S.regionMode && !S.game.editing ? "grid" : "none";
+    $("barValues").style.display = touch ? "grid" : "none";
+    $("editbar").classList.toggle("on", S.game.editing);
+  }
+
+  // ---------------------------------------------------------------- Zeichnen
+  const font = (px, weight = "normal") => `${weight} ${Math.max(6, Math.round(px))}px ${FONT}`;
+
+  function drawBoard() {
+    const s = S.cell, g = S.game, W = 9 * s;
+    ctx.clearRect(0, 0, W, W);
+    const hide = S.paused || S.generating;
+    const selVal = S.selected !== null && !hide ? g.values[S.selected] : 0;
+    const reg = g.regionMap();
+    const sq = g.squiggly || (g.editing && !!g.editRegions);
+    const colored = sq && (settings.colored || S.regionMode);
+    const diag = g.diagonals ? C.DIAG_CELLS : new Set();
+    const diagShade = diag.size > 0 && settings.diagStyle === "shade";
+    let red = new Set();
+    if (g.editing || S.showErrors) red = g.conflicts();
+    if (S.showErrors && !g.editing) g.wrongCells().forEach(i => red.add(i));
+    const sameCells = [], contents = [];
+
+    for (let i = 0; i < 81; i++) {
+      const r = Math.floor(i / 9), c = i % 9, x = c * s, y = r * s;
+      let fill = colored ? REGION_COLORS[reg[i]] : COL.bg;
+      if (diagShade && diag.has(i)) fill = colored ? darker(fill) : COL.diag;
+      const hov = !hide && S.hover && S.hover[0] === i ? S.hover : null;
+      if (!hide && !S.regionMode) {
+        if (hov || i === S.selected) fill = COL.selected;
+        else if (red.has(i)) fill = COL.errorBg;
+        else if (g.editing && S.unsure.has(i)) fill = COL.unsure;
+        else if (selVal && g.values[i] === selVal) { if (colored) sameCells.push(i); else fill = COL.same; }
+      }
+      ctx.fillStyle = fill;
+      ctx.fillRect(x, y, s, s);
+      if (!hide) contents.push([i, x, y, hov]);
+    }
+    if (diag.size && !diagShade) {
+      ctx.strokeStyle = COL.diagLine; ctx.lineWidth = Math.max(2, s / 20);
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(W, W); ctx.moveTo(W, 0); ctx.lineTo(0, W); ctx.stroke();
+    }
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (const [i, x, y, hov] of contents) {
+      const v = g.values[i];
+      if (v) {
+        ctx.fillStyle = red.has(i) ? COL.error : (g.givens[i] || g.editing) ? COL.given : COL.user;
+        ctx.font = font(s * 0.58);
+        ctx.fillText(String(v), x + s / 2, y + s / 2 + s * 0.03);
+      } else if (hov) {
+        drawHoverDigits(x, y, s, g.notes[i], hov[1]);
+      } else if (g.notes[i]) {
+        for (let d = 1; d <= 9; d++) if (g.notes[i] >> d & 1) {
+          const sr = Math.floor((d - 1) / 3), sc = (d - 1) % 3, hl = d === selVal;
+          ctx.fillStyle = hl ? COL.noteHl : COL.note;
+          ctx.font = font(s * 0.22, hl ? "bold" : "normal");
+          ctx.fillText(String(d), x + s * NOTE_POS[sc], y + s * NOTE_POS[sr] + 1);
+        }
+      }
+    }
+    for (const i of sameCells) {
+      const x = (i % 9) * s, y = Math.floor(i / 9) * s, m = s * 0.12;
+      ctx.strokeStyle = COL.noteHl; ctx.lineWidth = Math.max(2, s / 22);
+      ctx.strokeRect(x + m, y + m, s - 2 * m, s - 2 * m);
+    }
+    // Linien: dünn überall, dick an Gebietsgrenzen
+    ctx.strokeStyle = COL.thin; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let k = 1; k < 9; k++) {
+      ctx.moveTo(k * s + 0.5, 0); ctx.lineTo(k * s + 0.5, W);
+      ctx.moveTo(0, k * s + 0.5); ctx.lineTo(W, k * s + 0.5);
+    }
+    ctx.stroke();
+    const w = Math.max(2, s / 30);
+    ctx.strokeStyle = COL.thick; ctx.lineWidth = w; ctx.lineCap = "square";
+    ctx.beginPath();
+    for (let i = 0; i < 81; i++) {
+      const r = Math.floor(i / 9), c = i % 9;
+      if (c < 8 && reg[i] !== reg[i + 1]) { ctx.moveTo((c + 1) * s, r * s); ctx.lineTo((c + 1) * s, (r + 1) * s); }
+      if (r < 8 && reg[i] !== reg[i + 9]) { ctx.moveTo(c * s, (r + 1) * s); ctx.lineTo((c + 1) * s, (r + 1) * s); }
+    }
+    ctx.stroke();
+    ctx.strokeRect(w / 2, w / 2, W - w, W - w);
+    if (S.hintCell !== null && !hide) {
+      const x = (S.hintCell % 9) * s, y = Math.floor(S.hintCell / 9) * s;
+      ctx.strokeStyle = COL.hint; ctx.lineWidth = Math.max(2, s / 18);
+      ctx.strokeRect(x + 2, y + 2, s - 4, s - 4);
+    }
+    if (hide) {
+      ctx.fillStyle = COL.overlay; ctx.fillRect(w, w, W - 2 * w, W - 2 * w);
+      ctx.fillStyle = COL.status; ctx.font = font(s * 0.45);
+      ctx.fillText(S.generating ? "Erzeuge Rätsel …" : "Pause", W / 2, W / 2 - (S.generating ? 0 : s * 0.3));
+      if (!S.generating) { ctx.font = font(s * 0.28); ctx.fillText("Tippen zum Fortsetzen", W / 2, W / 2 + s * 0.45); }
+    }
+  }
+
+  function drawHoverDigits(x, y, s, notes, active) {
+    const bw = s * 0.29;
+    for (let d = 1; d <= 9; d++) {
+      const sr = Math.floor((d - 1) / 3), sc = (d - 1) % 3;
+      const cx = x + s * NOTE_POS[sc], cy = y + s * NOTE_POS[sr];
+      const isNote = notes >> d & 1;
+      if (d === active) {
+        ctx.fillStyle = COL.hoverBox; ctx.fillRect(cx - bw / 2, cy - bw / 2, bw, bw);
+        ctx.fillStyle = COL.bg;
+      } else ctx.fillStyle = isNote ? COL.note : COL.hoverDim;
+      ctx.font = font(s * 0.22, isNote ? "bold" : "normal");
+      ctx.fillText(String(d), cx, cy + 1);
+    }
+  }
+
+  // ---------------------------------------------------------------- Leisten
+  const ICONS = {
+    print: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="1.5" fill="currentColor"/><rect x="7" y="14" width="10" height="7" fill="#1e1e1e" stroke="currentColor"/></svg>',
+    hat: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h8l1 11H6z"/><ellipse cx="11" cy="17" rx="8" ry="2.3"/><rect x="6.4" y="13" width="9.4" height="1.6" fill="#1e1e1e"/><path d="M19 3v4M17 5h4M21 9v2M20 10h2" stroke="currentColor" stroke-width="1.4"/></svg>',
+    undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M19 20v-6a5 5 0 0 0-5-5H7"/><path d="M3 9l5-4v8z" fill="currentColor" stroke="none"/></svg>',
+    restart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M17.5 7.5A8 8 0 1 0 20 13"/><path d="M20 3v6h-6" fill="none"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L23 21H1z"/><rect x="11" y="9" width="2" height="6" fill="#1e1e1e"/><rect x="11" y="16.5" width="2" height="2" fill="#1e1e1e"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="18" rx="1.5"/><rect x="8" y="2" width="8" height="4" fill="currentColor"/><path d="M8 13l3 3 5-6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    pencil: '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 21l1.5-5L16 4.5l3.5 3.5L8 19.5z"/></svg>',
+    eraser: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 15l9-9 7 7-6 6H7z"/><path d="M8 10l7 7" /></svg>',
+  };
+  $("btnPrint").innerHTML = ICONS.print;
+  $("btnHat").innerHTML = ICONS.hat;
+  $("btnUndo").innerHTML = ICONS.undo;
+  $("btnRestart").innerHTML = ICONS.restart;
+  $("btnWarn").innerHTML = ICONS.warn;
+  $("btnCheck").innerHTML = ICONS.check;
+
+  function btn(html, cls, onTap, onRight) {
+    const b = document.createElement("button");
+    b.innerHTML = html;
+    if (cls) b.className = cls;
+    b.addEventListener("click", (e) => { e.preventDefault(); onTap && onTap(e); });
+    if (onRight) b.addEventListener("contextmenu", (e) => { e.preventDefault(); onRight(e); });
+    return b;
+  }
+
+  function renderBars() {
+    const g = S.game;
+    const sel = S.selected;
+    const selVal = sel !== null ? g.values[sel] : 0;
+    const selNotes = sel !== null ? g.notes[sel] : 0;
+    const count = (d) => g.digitCount(d);
+
+    if (S.regionMode) {
+      const sizes = g.regionSizes();
+      const make = (target) => {
+        target.innerHTML = "";
+        for (let k = 0; k < 9; k++) {
+          const b = btn(`${k + 1}<small style="color:${sizes[k] === 9 ? "#555" : "#c62828"}">${sizes[k]} F.</small>`,
+            "", () => { S.paintRegion = k; regionStatus(); render(); });
+          b.style.background = REGION_COLORS[k];
+          if (k === S.paintRegion) b.style.outline = "3px solid #2b2b2b";
+          target.appendChild(b);
+        }
+        const fb = btn("Fertig<small>malen</small>", "mode-on", toggleRegionMode);
+        fb.style.fontSize = "13px";
+        target.appendChild(fb);
+        if (target.id === "barMouse") target.appendChild(btn("", "rowlabel"));
+      };
+      make($("barMouse")); make($("barValues"));
+      return;
+    }
+    // Maus-Leiste (wie PC): 1-9, Notiz, Löschen
+    const bm = $("barMouse");
+    bm.innerHTML = "";
+    for (let d = 1; d <= 9; d++) {
+      const done = count(d) >= 9 && !g.editing;
+      let cls = done ? "done" : "";
+      if (d === selVal) cls += " sel";
+      else if (S.noteMode && (selNotes >> d & 1)) cls += " note-on";
+      const cnt = g.editing ? "" : `<span class="cnt">${Math.max(0, 9 - count(d))}</span>`;
+      bm.appendChild(btn(`${d}${cnt}`, cls, () => inputDigit(d, S.noteMode), () => inputDigit(d, true)));
+    }
+    bm.appendChild(btn(`${ICONS.pencil}<small>Notiz</small>`, S.noteMode ? "mode-on" : "", toggleNoteMode));
+    bm.appendChild(btn(`${ICONS.eraser}<small>Löschen</small>`, "", erase));
+
+    // Touch: kleine Notiz-Reihe oben, große Zahlen-Reihe unten
+    const bn = $("barNotes");
+    bn.innerHTML = "";
+    for (let d = 1; d <= 9; d++) {
+      const on = sel !== null && !selVal && (selNotes >> d & 1);
+      bn.appendChild(btn(String(d), on ? "note-on" : "", () => inputDigit(d, true)));
+    }
+    bn.appendChild(btn("Notiz", "rowlabel"));
+    const bv = $("barValues");
+    bv.innerHTML = "";
+    for (let d = 1; d <= 9; d++) {
+      const done = count(d) >= 9 && !g.editing;
+      let cls = done ? "done" : "";
+      if (d === selVal) cls += " sel";
+      const cnt = g.editing ? "" : `<span class="cnt">${Math.max(0, 9 - count(d))}</span>`;
+      bv.appendChild(btn(`${d}${cnt}`, cls, () => inputDigit(d, false)));
+    }
+    bv.appendChild(btn(ICONS.eraser, "", erase));
+  }
+
+  function renderTools() {
+    const g = S.game;
+    $("btnHat").disabled = g.editing;
+    $("btnRestart").disabled = g.editing;
+    $("btnWarn").disabled = g.editing;
+    $("btnWarn").classList.toggle("active", S.showErrors);
+    const p = $("btnPause");
+    if (g.editing) { p.textContent = "Fertig"; p.classList.add("active"); p.title = "Eingabe abschließen"; }
+    else { p.textContent = S.paused ? "Weiter" : "Pause"; p.classList.remove("active"); p.title = "Pause / Weiter (P)"; }
+    $("timer").textContent = g.editing ? "Eingabe" : fmtTime(g.elapsed);
+    const eb = $("btnRegions");
+    eb.style.display = g.editRegions ? "" : "none";
+    eb.classList.toggle("active", S.regionMode);
+    eb.textContent = S.regionMode ? "Fertig malen" : "Gebiete malen";
+    const db = $("btnDiag");
+    db.classList.toggle("active", g.editDiagonals);
+    db.textContent = "Diagonalen: " + (g.editDiagonals ? "an" : "aus");
+  }
+
+  function statusPrefix() {
+    const g = S.game, kind = g.kind();
+    if (g.editing) return kind === "Sudoku" ? "Eigenes Rätsel eingeben" : `Eigenes ${kind} eingeben`;
+    const name = g.level ? LEVELS[g.level] : "";
+    if (kind !== "Sudoku") return name ? `${kind} · ${name}` : kind;
+    return name;
+  }
+  function renderStatus() {
+    const pre = statusPrefix();
+    $("title").innerHTML = `Sudoku${pre ? ` <span>· ${pre}</span>` : ""}`;
+    document.title = pre ? `Sudoku – ${pre}` : "Sudoku";
+    $("status").textContent = S.statusMsg;
+    $("status").title = S.statusMsg;
+  }
+  function status(msg) { S.statusMsg = msg; renderStatus(); }
+
+  function render() {
+    drawBoard();
+    renderBars();
+    renderTools();
+    renderStatus();
+  }
+
+  // ---------------------------------------------------------------- Timer
+  setInterval(() => {
+    const now = performance.now();
+    const g = S.game;
+    const running = !(S.paused || S.generating || g.finished || g.editing || document.hidden);
+    if (running) g.elapsed += (now - S.lastTick) / 1000;
+    S.lastTick = now;
+    $("timer").textContent = g.editing ? "Eingabe" : fmtTime(g.elapsed);
+  }, 250);
+
+  // ---------------------------------------------------------------- Dialoge
+  const overlay = $("overlay");
+  function dialog(html, buttons = [{ label: "OK", primary: true }], { cls = "dlg", onOpen } = {}) {
+    return new Promise((resolve) => {
+      overlay.innerHTML = "";
+      const d = document.createElement("div");
+      d.className = cls;
+      d.innerHTML = html;
+      if (buttons.length) {
+        const row = document.createElement("div");
+        row.className = "btns";
+        for (const b of buttons) {
+          const el = document.createElement("button");
+          el.textContent = b.label;
+          if (b.primary) el.className = "primary";
+          el.onclick = () => { close(); resolve(b.value !== undefined ? b.value : b.label); };
+          row.appendChild(el);
+        }
+        d.appendChild(row);
+      }
+      overlay.appendChild(d);
+      overlay.classList.add("on");
+      overlay.onclick = (e) => { if (e.target === overlay) { close(); resolve(null); } };
+      d._resolve = (v) => { close(); resolve(v); };
+      if (onOpen) onOpen(d);
+    });
+  }
+  function close() { overlay.classList.remove("on"); overlay.innerHTML = ""; }
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const info = (title, text) => dialog(`<h2>${esc(title)}</h2><pre>${esc(text)}</pre>`);
+  const confirmDlg = (title, text, yes = "Ja", no = "Abbrechen") =>
+    dialog(`<h2>${esc(title)}</h2><p>${esc(text)}</p>`, [{ label: no, value: false }, { label: yes, primary: true, value: true }]);
+
+  // ---------------------------------------------------------------- Aktionen
+  function playable() {
+    if (S.generating || S.paused) return false;
+    if (S.game.finished) { status("Das Spiel ist beendet – neues Spiel über das Menü ☰."); return false; }
+    return true;
+  }
+
+  function inputDigit(d, asNote) {
+    if (S.regionMode || !playable()) return;
+    const g = S.game, i = S.selected;
+    if (i === null) { status("Bitte zuerst ein Feld antippen."); return; }
+    if (g.givens[i]) { status("Vorgegebene Zahlen können nicht geändert werden."); return; }
+    let changed;
+    if (asNote && !g.editing) {
+      if (g.values[i]) { status("Im Feld steht schon eine Zahl – erst löschen, dann Notizen setzen."); return; }
+      changed = g.toggleNote(i, d);
+    } else changed = g.setValue(i, d);
+    if (changed) { S.unsure.delete(i); afterChange(); }
+  }
+
+  function erase() {
+    if (S.regionMode || !playable() || S.selected === null) return;
+    if (S.game.clearCell(S.selected)) { S.unsure.delete(S.selected); afterChange(); }
+  }
+
+  function afterChange(msg = "") {
+    S.hintCell = null;
+    const g = S.game;
+    if (g.editing && !msg) msg = "Vorgaben eintragen, dann „Fertig“.";
+    S.statusMsg = msg;
+    if (!g.editing && !g.finished && g.isSolved()) {
+      g.finished = true;
+      render(); autosave();
+      status(`Gelöst in ${fmtTime(g.elapsed)}!`);
+      info("Gelöst!", `Glückwunsch – ${g.kind() === "Sudoku" ? "Sudoku" : g.kind()} gelöst in ${fmtTime(g.elapsed)}.`);
+      return;
+    }
+    render();
+    autosave();
+  }
+
+  function toggleNoteMode() {
+    S.noteMode = !S.noteMode;
+    status(S.noteMode ? "Notizmodus EIN – Zahlen werden als Notiz eingetragen." : "Notizmodus AUS.");
+    render();
+  }
+
+  function togglePause() {
+    const g = S.game;
+    if (g.editing || g.finished || S.generating) return;
+    S.paused = !S.paused;
+    S.statusMsg = S.paused ? "Pausiert." : "";
+    render();
+  }
+
+  function undo() { if (S.game.undo()) afterChange("Rückgängig."); }
+  function redo() { if (S.game.redo()) afterChange("Wiederholt."); }
+
+  async function restart() {
+    const g = S.game;
+    if (g.editing || S.generating) return;
+    if (g.hasProgress() && !(await confirmDlg("Neustart", "Alle eigenen Eingaben und Notizen löschen und die Zeit zurücksetzen?"))) return;
+    g.reset(); S.paused = false;
+    afterChange("Rätsel neu gestartet.");
+  }
+
+  function toggleErrors() {
+    const g = S.game;
+    if (g.editing) return;
+    S.showErrors = !S.showErrors;
+    if (S.showErrors) {
+      const n = new Set([...g.wrongCells(), ...g.conflicts()]).size;
+      status(n ? `${n} fehlerhafte(s) Feld(er) markiert.` : "Keine Fehler gefunden.");
+    } else status("Fehleranzeige aus.");
+    render();
+  }
+
+  async function check() {
+    const g = S.game;
+    if (g.editing) { finishEdit(); return; }
+    if (g.isSolved()) { info("Prüfen", "Alles richtig – das Sudoku ist gelöst!"); return; }
+    const wrong = new Set([...g.wrongCells(), ...g.conflicts()]).size, empty = g.emptyCount();
+    if (wrong) {
+      if (await confirmDlg("Prüfen", `${wrong} Feld(er) sind falsch, ${empty} Feld(er) noch leer. Fehler jetzt anzeigen?`, "Anzeigen", "Nein")) {
+        S.showErrors = true; render();
+      }
+    } else info("Prüfen", `Bisher alles richtig. Noch ${empty} Feld(er) leer.`);
+  }
+
+  function hint() {
+    if (!playable()) return;
+    const g = S.game;
+    const wrong = new Set([...g.wrongCells(), ...g.conflicts()]);
+    if (wrong.size) { S.showErrors = true; render(); status(`Zuerst ${wrong.size} fehlerhafte(s) Feld(er) korrigieren (rot markiert).`); return; }
+    const h = C.findHint(g.values, g.layout);
+    if (!h) { status("Mit den eingebauten Techniken kein Schritt gefunden – „Feld aufdecken“ hilft weiter."); return; }
+    S.selected = h.cell; S.hintCell = h.cell;
+    render();
+    status("Tipp: " + h.text);
+  }
+  function revealCell() {
+    if (!playable()) return;
+    if (S.selected === null) { status("Bitte zuerst ein Feld antippen."); return; }
+    if (S.game.reveal(S.selected)) afterChange(`Aufgedeckt: ${C.cellName(S.selected)}.`);
+  }
+  function fillCandidates() { if (playable() && !S.game.editing && S.game.fillCandidates()) afterChange("Kandidaten eingetragen."); }
+  function clearNotes() { if (playable() && !S.game.editing && S.game.clearNotes()) afterChange("Alle Notizen gelöscht."); }
+  async function showSolution() {
+    if (!playable()) return;
+    if (await confirmDlg("Lösung anzeigen", "Lösung anzeigen und das Spiel beenden?", "Anzeigen")) {
+      S.game.showSolution(); S.showErrors = false; render(); autosave(); status("Lösung angezeigt.");
+    }
+  }
+
+  function hatMenu() {
+    if (S.game.editing) return;
+    const items = [["Tipp: nächster logischer Schritt", hint], ["Ausgewähltes Feld aufdecken", revealCell],
+      ["Kandidaten automatisch eintragen", fillCandidates], ["Alle Notizen löschen", clearNotes],
+      ["Wiederholen (Strg+Y)", redo], ["Lösung anzeigen", showSolution]];
+    dialog(`<h2>Hilfen</h2><div class="menu" style="display:grid;gap:6px" id="hatItems"></div>`,
+      [{ label: "Schließen" }], {
+        onOpen: (d) => {
+          const box = d.querySelector("#hatItems");
+          for (const [label, fn] of items) {
+            const b = document.createElement("button");
+            b.textContent = label;
+            b.onclick = () => { d._resolve(null); fn(); };
+            box.appendChild(b);
+          }
+        },
+      });
+  }
+
+  // ---------------------------------------------------------------- Neues Spiel
+  async function confirmDiscard() {
+    const g = S.game;
+    if (g.editing || (g.hasProgress() && !g.finished)) return confirmDlg("Neues Spiel", "Das aktuelle Spiel verwerfen?", "Verwerfen");
+    return true;
+  }
+
+  async function newGame(level, squiggly, diagonals, confirm = true) {
+    if (S.generating) return;
+    if (confirm && !(await confirmDiscard())) return;
+    const kind = squiggly ? (diagonals ? "Squiggly-X" : "Squiggly") : (diagonals ? "X-Sudoku" : "Rätsel");
+    S.generating = true; S.paused = false; S.regionMode = false;
+    S.statusMsg = `Erzeuge ${kind} (${LEVELS[level]}) …`;
+    if (S.game.editing) S.game.cancelEditing();
+    layout(); render();
+    setTimeout(() => {
+      const r = C.generate(level, { squiggly, diagonals });
+      S.game.loadPuzzle(r.puzzle, r.solution, r.level, r.layout);
+      S.generating = false; S.selected = null; S.hintCell = null; S.showErrors = false; S.hover = null;
+      S.lastTick = performance.now();
+      let msg = `Neues ${kind} mit ${r.puzzle.filter(v => v).length} Vorgaben.`;
+      if (r.level !== level) msg += ` (Gewünscht: ${LEVELS[level]} – nicht rechtzeitig gefunden.)`;
+      S.statusMsg = msg;
+      layout(); render(); autosave();
+    }, 40);
+  }
+
+  // ---------------------------------------------------------------- Eingabemodus
+  async function startEdit({ prefill = null, squiggly = false, regions = null, diagonals = false } = {}) {
+    if (S.generating) return;
+    if (!prefill && !regions && !(await confirmDiscard())) return;
+    S.game.startEditing(prefill, regions, squiggly, diagonals);
+    S.paused = false; S.noteMode = false; S.selected = 0; S.hintCell = null; S.unsure = new Set();
+    S.regionMode = squiggly && !regions && !prefill;
+    if (S.regionMode) { S.paintRegion = 0; S.painted = false; regionStatus(); }
+    else S.statusMsg = "Vorgaben eintragen, dann „Fertig“.";
+    layout(); render();
+  }
+
+  async function finishEdit() {
+    const g = S.game;
+    if (!g.editing) return;
+    const [st, n] = g.finishEditing();
+    if (st === "regions") {
+      await info("Gebiete prüfen", "Die Gebiete sind noch nicht in Ordnung:\n\n• " + n.join("\n• ") +
+        "\n\nJedes Gebiet braucht genau 9 zusammenhängende Felder.");
+      S.regionMode = true; regionStatus(); layout(); render();
+      return;
+    }
+    const texts = {
+      conflict: "Die Eingabe enthält doppelte Zahlen (rot markiert).",
+      few: `Erst ${n} Vorgaben – ein eindeutiges Sudoku braucht mindestens 17.`,
+      none: "Dieses Rätsel hat keine Lösung.",
+      multiple: "Dieses Rätsel hat mehrere Lösungen. Bitte weitere Vorgaben ergänzen.",
+    };
+    if (st !== "ok") { info("Rätsel prüfen", texts[st]); render(); return; }
+    S.selected = null; S.showErrors = false; S.regionMode = false; S.unsure = new Set();
+    S.lastTick = performance.now();
+    const kind = g.kind() === "Sudoku" ? "Rätsel" : g.kind();
+    layout();
+    afterChange(`${kind} übernommen: ${n} Vorgaben, Schwierigkeit ${LEVELS[g.level]}.`);
+  }
+
+  function cancelEdit() {
+    if (!S.game.editing) return;
+    S.game.cancelEditing();
+    S.selected = null; S.regionMode = false; S.unsure = new Set();
+    layout();
+    afterChange("Eingabe abgebrochen.");
+  }
+
+  function toggleRegionMode() {
+    const g = S.game;
+    if (!(g.editing && g.editRegions)) { S.regionMode = false; return; }
+    S.regionMode = !S.regionMode;
+    S.hover = null;
+    if (S.regionMode) regionStatus(); else S.statusMsg = "Vorgaben eintragen, dann „Fertig“.";
+    layout(); render();
+  }
+  function toggleDiagonals() {
+    const g = S.game;
+    if (!g.editing) { status("Diagonalen lassen sich im Eingabemodus ein- und ausschalten."); return; }
+    g.setDiagonals(!g.editDiagonals);
+    S.statusMsg = g.editDiagonals ? "Diagonalen EIN (X-Sudoku)." : "Diagonalen AUS.";
+    render();
+  }
+  function paintCell(i) { if (S.game.setRegion(i, S.paintRegion)) { S.painted = true; regionStatus(); render(); } }
+  function regionStatus() {
+    const problems = C.regionProblems(S.game.regionMap());
+    S.statusMsg = !S.painted ? "Farbe wählen, dann Felder antippen oder überstreichen."
+      : problems.length ? problems[0] : "Alle 9 Gebiete in Ordnung – „Fertig malen“.";
+    renderStatus();
+  }
+
+  // ---------------------------------------------------------------- Codes
+  async function importCode(text) {
+    let grid, lay;
+    try { [grid, lay] = C.parseCode(text); }
+    catch (e) { info("Einfügen", "Kein gültiges Rätsel erkannt.\n" + e.message); return; }
+    if (!(await confirmDiscard())) return;
+    await startEdit({ prefill: grid, regions: lay.squiggly ? lay.regionOf : null, diagonals: lay.diagonals });
+    finishEdit();
+  }
+  function pasteDialog() {
+    dialog(`<h2>Rätsel-Code einfügen</h2>
+      <p>81 Zeichen (Ziffern, <b>.</b> oder <b>0</b> für leer), bei Squiggly <b>|</b> + 81 Gebietsziffern, bei Diagonalen am Ende <b>|X</b>.</p>
+      <textarea id="codeIn" placeholder="z. B. 1.3....9.........5...582..3 …"></textarea>`,
+      [{ label: "Aus Zwischenablage", value: "clip" }, { label: "Abbrechen", value: null }, { label: "Übernehmen", primary: true, value: "ok" }],
+      { onOpen: (d) => { d.querySelector("#codeIn").focus(); d._text = () => d.querySelector("#codeIn").value; } })
+      .then(async (v) => { /* Wert wird in onclick unten gelesen */ });
+    // Schaltflächen nach dem Öffnen umleiten, damit wir den Text lesen können
+    const d = overlay.querySelector(".dlg");
+    const [bClip, , bOk] = d.querySelectorAll(".btns button");
+    bClip.onclick = async () => {
+      try { d.querySelector("#codeIn").value = await navigator.clipboard.readText(); }
+      catch (e) { status("Zugriff auf die Zwischenablage nicht möglich – bitte manuell einfügen."); }
+    };
+    bOk.onclick = () => { const t = d.querySelector("#codeIn").value; close(); importCode(t); };
+  }
+  async function copyCode() {
+    const g = S.game;
+    const grid = g.editing ? g.values : g.puzzle();
+    const lay = g.editing ? (g.activeLayout() || C.CLASSIC) : g.layout;
+    const code = C.toCode(grid, lay);
+    try { await navigator.clipboard.writeText(code); status("Rätsel-Code in die Zwischenablage kopiert."); }
+    catch (e) {
+      dialog(`<h2>Rätsel-Code</h2><textarea readonly id="codeOut">${esc(code)}</textarea>`, [{ label: "Schließen", primary: true }],
+        { onOpen: (d) => { const t = d.querySelector("#codeOut"); t.focus(); t.select(); } });
+    }
+  }
+
+  // ---------------------------------------------------------------- Analyse
+  function analyze() {
+    const g = S.game;
+    const grid = g.editing ? g.values.slice() : g.puzzle();
+    const lay = g.activeLayout();
+    const n = grid.filter(v => v).length;
+    if (!lay) { info("Analyse", "Die Gebiete sind noch nicht vollständig (je 9 Felder)."); return; }
+    if (g.editing && g.conflicts().size) { info("Analyse", "Die Eingabe enthält doppelte Zahlen."); return; }
+    const sols = C.countSolutions(grid, 2, lay);
+    if (sols !== 1) { info("Analyse", sols === 0 ? "Das Rätsel hat keine Lösung." : "Das Rätsel hat (noch) mehrere Lösungen."); return; }
+    const [level, used] = C.rateDetails(grid, C.MAX_LEVEL, lay);
+    const kind = { Sudoku: "Klassisches Sudoku", Squiggly: "Squiggly-Sudoku" }[lay.kind] || lay.kind;
+    const lines = [kind, `Schwierigkeit: ${LEVELS[level]}`, `Vorgaben: ${n}`, ""];
+    if (Object.keys(used).length) {
+      lines.push("Benötigte Techniken (Anzahl Anwendungen):");
+      for (const [name, lvl] of C.TECHNIQUES) if (used[name]) lines.push(`   • ${name}: ${used[name]}×   (${LEVELS[lvl]})`);
+    }
+    if (level === 5) lines.push("", "Mit den eingebauten Techniken nicht vollständig lösbar –", "erfordert Erzwingungsketten oder Ausprobieren.");
+    lines.push("", "Stufen:", "   Leicht – nur Einzelne", "   Mittel – Block-Linien-Interaktion, Paare,",
+      "                 bei Squiggly: Gesetz der Überbleibsel", "   Schwer – Tripel, X-Wing, Swordfish, XY-/XYZ-Wing",
+      "   Sehr schwer – Quadrupel, Jellyfish, W-Wing, Färbung, X-/XY-Ketten", "   Extrem – darüber hinaus");
+    info("Schwierigkeit analysieren", lines.join("\n"));
+  }
+
+  // ---------------------------------------------------------------- Drucken
+  async function printPuzzle() {
+    const g = S.game;
+    let include = false;
+    if (g.hasProgress() && !g.editing) {
+      const v = await dialog("<h2>Drucken</h2><p>Eigene Eingaben mitdrucken?</p>",
+        [{ label: "Nur Rätsel", value: false }, { label: "Mit Eingaben", primary: true, value: true }]);
+      if (v === null) return;
+      include = v;
+    }
+    const reg = g.regionMap();
+    const colored = g.squiggly && settings.colored;
+    const diag = g.diagonals ? C.DIAG_CELLS : new Set();
+    const lines = diag.size && settings.diagStyle === "lines";
+    let rows = "";
+    for (let r = 0; r < 9; r++) {
+      rows += "<tr>";
+      for (let c = 0; c < 9; c++) {
+        const i = r * 9 + c, v = g.values[i], cls = [];
+        if (c < 8 && reg[i] !== reg[i + 1]) cls.push("br");
+        if (r < 8 && reg[i] !== reg[i + 9]) cls.push("bb");
+        let bg = colored ? REGION_COLORS[reg[i]] : "";
+        if (diag.has(i) && !lines) bg = colored ? darker(bg) : "#e4e4e4";
+        let txt = "";
+        if (v && (g.givens[i] || g.editing)) txt = v;
+        else if (v && include) { txt = v; cls.push("user"); }
+        rows += `<td class="${cls.join(" ")}"${bg ? ` style="background:${bg}"` : ""}>${txt}</td>`;
+      }
+      rows += "</tr>";
+    }
+    const svg = lines ? '<svg viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="0" x2="100" y2="100" stroke="#8fa6c8" stroke-width="0.6"/><line x1="100" y1="0" x2="0" y2="100" stroke="#8fa6c8" stroke-width="0.6"/></svg>' : "";
+    $("print").innerHTML = `<h1>${esc(g.kind())}</h1><p>${esc(statusPrefix())} · ${new Date().toLocaleDateString("de-AT")}</p>
+      <div class="wrap"><table>${rows}</table>${svg}</div>`;
+    window.print();
+  }
+
+  // ---------------------------------------------------------------- Menü
+  function menu() {
+    let tab = settings.lastVariant || 0;
+    const html = `<h2>Menü</h2><div class="menu">
+      <h3>Neues Spiel</h3>
+      <div class="tabs" id="mTabs">${VARIANTS.map(([n], k) => `<button data-k="${k}" class="${k === tab ? "on" : ""}">${n}</button>`).join("")}</div>
+      <div class="grid" id="mLevels">${[1, 2, 3, 4, 5].map(l => `<button data-l="${l}">${LEVELS[l]}</button>`).join("")}</div>
+      <h3>Eigenes Rätsel eingeben</h3>
+      <div class="tabs" id="mOwn">${VARIANTS.map(([n], k) => `<button data-k="${k}">${n}</button>`).join("")}</div>
+      <h3>Rätsel-Code</h3>
+      <div class="grid2"><button id="mPaste">Einfügen …</button><button id="mCopy">Kopieren</button></div>
+      <h3>Rätsel</h3>
+      <div class="grid2"><button id="mAnalyze">Schwierigkeit analysieren</button><button id="mPrint">Drucken</button>
+        <button id="mFill">Kandidaten eintragen</button><button id="mClear">Notizen löschen</button></div>
+      <h3>Ansicht</h3>
+      <label><input type="checkbox" id="mColored" ${settings.colored ? "checked" : ""}> Squiggly-Gebiete farbig</label>
+      <div style="font-size:13px;color:#666;margin:6px 0 4px">Diagonalen (X-Sudoku)</div>
+      <div class="seg" id="mDiag" style="grid-template-columns:repeat(2,1fr)"><button data-v="shade">hinterlegt</button><button data-v="lines">als Linien</button></div>
+      <div style="font-size:13px;color:#666;margin:10px 0 4px">Bedienung</div>
+      <div class="seg" id="mInput"><button data-v="auto">automatisch</button><button data-v="mouse">Maus</button><button data-v="touch">Finger</button></div>
+      <h3>Hilfe</h3>
+      <div class="grid2"><button id="mHelp">Bedienung</button><button id="mClose">Schließen</button></div>
+    </div>`;
+    dialog(html, [], {
+      onOpen: (d) => {
+        const q = (s) => d.querySelector(s);
+        const mark = () => {
+          d.querySelectorAll("#mTabs button").forEach(b => b.classList.toggle("on", +b.dataset.k === tab));
+          d.querySelectorAll("#mDiag button").forEach(b => b.classList.toggle("on", b.dataset.v === settings.diagStyle));
+          d.querySelectorAll("#mInput button").forEach(b => b.classList.toggle("on", b.dataset.v === settings.input));
+        };
+        mark();
+        d.querySelectorAll("#mTabs button").forEach(b => b.onclick = () => { tab = +b.dataset.k; settings.lastVariant = tab; saveSettings(); mark(); });
+        d.querySelectorAll("#mLevels button").forEach(b => b.onclick = () => {
+          close(); const [, sq, dg] = VARIANTS[tab]; newGame(+b.dataset.l, sq, dg);
+        });
+        d.querySelectorAll("#mOwn button").forEach(b => b.onclick = () => {
+          close(); const [, sq, dg] = VARIANTS[+b.dataset.k]; startEdit({ squiggly: sq, diagonals: dg });
+        });
+        q("#mPaste").onclick = () => { close(); pasteDialog(); };
+        q("#mCopy").onclick = () => { close(); copyCode(); };
+        q("#mAnalyze").onclick = () => { close(); analyze(); };
+        q("#mPrint").onclick = () => { close(); printPuzzle(); };
+        q("#mFill").onclick = () => { close(); fillCandidates(); };
+        q("#mClear").onclick = () => { close(); clearNotes(); };
+        q("#mColored").onchange = (e) => { settings.colored = e.target.checked; saveSettings(); render(); };
+        d.querySelectorAll("#mDiag button").forEach(b => b.onclick = () => { settings.diagStyle = b.dataset.v; saveSettings(); mark(); render(); });
+        d.querySelectorAll("#mInput button").forEach(b => b.onclick = () => {
+          settings.input = b.dataset.v; saveSettings(); S.input = detectInput(); S.hover = null; mark(); layout(); render();
+        });
+        q("#mHelp").onclick = () => { close(); help(); };
+        q("#mClose").onclick = close;
+      },
+    });
+  }
+
+  function help() {
+    info("Bedienung", `MIT DER MAUS (PC)
+• Feld überfahren: alle 9 Ziffern erscheinen (oben 1 2 3, Mitte 4 5 6,
+  unten 7 8 9), die Ziffer unter der Maus ist schwarz hinterlegt
+• Klick: Notiz ein/aus · Doppelklick: Zahl eintragen/löschen
+• Rechtsklick: Notiz · Zahlenleiste: Ziffer (im Notizmodus Notiz)
+
+MIT DEM FINGER (Handy, Tablet)
+• Feld antippen, dann Ziffer tippen:
+  obere kleine Reihe = Notiz, untere große Reihe = Zahl
+• Gleiche Zahl nochmals = Feld leeren, Radierer = löschen
+
+TASTATUR
+• 1–9, 0/Entf, Pfeiltasten, N (Notizmodus), P (Pause)
+• Strg+Z / Strg+Y, Strg+V fügt einen Rätsel-Code ein
+
+WERKZEUGLEISTE
+Drucken · Zeit · Hilfen (Zauberhut: Tipp, Feld aufdecken,
+Kandidaten, Lösung) · Rückgängig · Neustart · Pause ·
+Fehler anzeigen · Prüfen
+
+VARIANTEN
+Squiggly: 9 unregelmäßige Gebiete statt Blöcke.
+X-Sudoku: zusätzlich beide Diagonalen 1–9.
+Eigenes Squiggly: zuerst Gebiete malen (Farbe wählen,
+Felder antippen oder überstreichen).
+
+Der Spielstand wird automatisch auf diesem Gerät gespeichert.`);
+  }
+
+  // ---------------------------------------------------------------- Maus & Finger
+  function hitCell(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left, y = e.clientY - rect.top, s = S.cell;
+    if (x < 0 || y < 0 || x >= 9 * s || y >= 9 * s) return null;
+    const c = Math.min(8, Math.floor(x / s)), r = Math.min(8, Math.floor(y / s));
+    const sx = Math.min(2, Math.floor((x - c * s) / (s / 3))), sy = Math.min(2, Math.floor((y - r * s) / (s / 3)));
+    return [r * 9 + c, sy * 3 + sx + 1];
+  }
+  const hoverOk = (i) => {
+    const g = S.game;
+    return !(S.paused || S.generating || g.finished || g.givens[i] || S.regionMode);
+  };
+
+  canvas.addEventListener("pointerdown", (e) => {
+    setInputFrom(e.pointerType);
+    const h = hitCell(e);
+    if (!h || S.generating) return;
+    const [i, d] = h, g = S.game;
+    if (S.paused) { togglePause(); return; }
+    if (S.regionMode) {
+      if (e.button === 2) { S.paintRegion = g.regionMap()[i]; regionStatus(); render(); return; }
+      S.painting = true; canvas.setPointerCapture(e.pointerId); paintCell(i); return;
+    }
+    if (S.input === "touch") { S.selected = i; S.hintCell = null; render(); return; }
+    // Maus
+    if (e.button === 2) {
+      S.selected = i;
+      if (!g.editing && !g.values[i]) inputDigit(d, true); else render();
+      return;
+    }
+    if (e.button !== 0) return;
+    S.selected = i; S.clickNote = null;
+    if (hoverOk(i) && !g.values[i] && !g.editing) {
+      if (g.toggleNote(i, d)) { S.clickNote = [i, d, g._undo.length]; afterChange(); return; }
+    }
+    render();
+  });
+  canvas.addEventListener("dblclick", (e) => {
+    if (S.input !== "mouse" || S.regionMode || S.paused || S.generating) return;
+    const h = hitCell(e);
+    if (!h) return;
+    const [i, d] = h, g = S.game;
+    S.selected = i;
+    const cn = S.clickNote;
+    if (cn && cn[0] === i && cn[1] === d && g._undo.length === cn[2]) g.undo();   // Notiz vom ersten Klick zurücknehmen
+    S.clickNote = null;
+    if (g.values[i] && !g.givens[i] && !g.editing) erase();
+    else inputDigit(d, false);
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "mouse") setInputFrom("mouse");
+    if (S.regionMode) {
+      if (S.painting) { const h = hitCell(e); if (h) paintCell(h[0]); }
+      return;
+    }
+    if (S.input !== "mouse") return;
+    const h = hitCell(e);
+    let nh = null;
+    if (h && hoverOk(h[0])) nh = [h[0], S.game.values[h[0]] ? null : h[1]];
+    if (JSON.stringify(nh) !== JSON.stringify(S.hover)) { S.hover = nh; drawBoard(); }
+  });
+  canvas.addEventListener("pointerup", () => { S.painting = false; });
+  canvas.addEventListener("pointercancel", () => { S.painting = false; });
+  canvas.addEventListener("pointerleave", () => { if (S.hover) { S.hover = null; drawBoard(); } });
+  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  document.addEventListener("keydown", (e) => {
+    if (overlay.classList.contains("on") || S.generating) return;
+    const k = e.key;
+    if ((e.ctrlKey || e.metaKey) && (k === "z" || k === "Z")) { e.preventDefault(); undo(); return; }
+    if ((e.ctrlKey || e.metaKey) && (k === "y" || k === "Y")) { e.preventDefault(); redo(); return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (k === "p" || k === "P") { togglePause(); return; }
+    if (S.paused) return;
+    if (k === "g" || k === "G") { toggleRegionMode(); return; }
+    if (k === "x" || k === "X") { toggleDiagonals(); return; }
+    if (S.regionMode) { if (k >= "1" && k <= "9") { S.paintRegion = +k - 1; regionStatus(); render(); } return; }
+    if (k >= "1" && k <= "9") inputDigit(+k, S.noteMode);
+    else if (k === "0" || k === "Delete" || k === "Backspace") erase();
+    else if (k === "n" || k === "N" || k === " ") { e.preventDefault(); toggleNoteMode(); }
+    else if (k.startsWith("Arrow")) {
+      e.preventDefault();
+      const i = S.selected === null ? 40 : S.selected;
+      const r = Math.floor(i / 9), c = i % 9;
+      const [dr, dc] = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[k];
+      S.selected = ((r + dr + 9) % 9) * 9 + (c + dc + 9) % 9;
+      render();
+    }
+  });
+  document.addEventListener("paste", (e) => {
+    if (overlay.classList.contains("on")) return;          // im Dialog normal einfügen
+    const text = (e.clipboardData || window.clipboardData).getData("text");
+    if (text) { e.preventDefault(); importCode(text); }
+  });
+
+  // Werkzeugleiste & Kopf
+  $("btnMenu").onclick = menu;
+  $("btnPrint").onclick = printPuzzle;
+  $("btnHat").onclick = hatMenu;
+  $("btnUndo").onclick = undo;
+  $("btnUndo").oncontextmenu = (e) => { e.preventDefault(); redo(); };
+  $("btnRestart").onclick = restart;
+  $("btnPause").onclick = () => (S.game.editing ? finishEdit() : togglePause());
+  $("btnWarn").onclick = toggleErrors;
+  $("btnCheck").onclick = check;
+  $("btnRegions").onclick = toggleRegionMode;
+  $("btnDiag").onclick = toggleDiagonals;
+  $("btnCancelEdit").onclick = cancelEdit;
+
+  // ---------------------------------------------------------------- Speichern
+  function stateForSave() { const g = S.game; return g.editing ? g._editBackup : g.toDict(); }
+  function autosave() { const d = stateForSave(); if (d) store.set(KEY_SAVE, d); }
+  document.addEventListener("visibilitychange", () => { if (document.hidden) autosave(); });
+  window.addEventListener("pagehide", autosave);
+  setInterval(autosave, 15000);
+
+  window.addEventListener("resize", () => { layout(); render(); });
+
+  // ---------------------------------------------------------------- Start
+  function start() {
+    layout();
+    const saved = store.get(KEY_SAVE);
+    if (saved) {
+      try {
+        const g = new C.Game(); g.fromDict(saved);
+        S.game = g; S.statusMsg = "Letztes Spiel fortgesetzt.";
+        layout(); render(); return;
+      } catch (e) { /* defekt -> neues Spiel */ }
+    }
+    newGame(2, false, false, false);
+  }
+  // Für Tests von außen erreichbar
+  window.SudokuUI = { S, render, layout, newGame, startEdit, finishEdit, importCode, analyze, hint, settings };
+  start();
+})();
+
+</script>
+<script>
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
