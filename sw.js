@@ -1,5 +1,5 @@
 // Service Worker: hält die App für den Offline-Betrieb im Speicher.
-const CACHE = "sudoku-48546b2a83";
+const CACHE = "sudoku-dbd72147cd";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));

@@ -39,6 +39,9 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
 .bar button { border: none; border-radius: 6px; background: var(--nb-bg); color: var(--nb-fg); cursor: pointer;
   font-family: var(--font); position: relative; padding: 0; touch-action: manipulation; }
 .bar button:active { filter: brightness(.92); }
+.bar button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.bar button .hold { position: absolute; left: 0; bottom: 0; height: 4px; width: 0; background: var(--accent, #1f5fa8);
+  border-radius: 0 0 0 6px; pointer-events: none; }
 .bar button .cnt { position: absolute; bottom: 2px; right: 4px; font-size: 9px; color: #9a9a9a; }
 .bar button.done { color: var(--nb-done); }
 .bar button.sel { background: var(--nb-sel); }
@@ -1202,7 +1205,9 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* privat/voll */ } },
   };
-  const settings = Object.assign({ colored: true, diagStyle: "shade", input: "auto", lastVariant: 0 },
+  // touchMode: "two" = Notiz-Reihe + Zahlen-Reihe, "one" = eine Reihe (Antippen/Gedrückthalten)
+  const settings = Object.assign({ colored: true, diagStyle: "shade", input: "auto", lastVariant: 0,
+    touchMode: "two", holdMs: 1000 },
     store.get(KEY_SET) || {});
   const saveSettings = () => store.set(KEY_SET, settings);
 
@@ -1230,12 +1235,16 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
   function layout() {
     const vw = document.documentElement.clientWidth, vh = window.innerHeight;
     const editH = S.game.editing ? 44 : 0;
-    const k = S.input === "touch" && !S.regionMode && !S.game.editing ? 0.62 + 1 + 1.9 : 1 + 1.9;
+    const notesRow = S.input === "touch" && !S.regionMode && !S.game.editing && settings.touchMode === "two";
+    // eine Reihe: der gesparte Platz geht in größere Zifferntasten (leichter zu halten)
+    const bigRow = S.input === "touch" && !notesRow && settings.touchMode === "one";
+    const rowF = bigRow ? 1.3 : 1;
+    const k = notesRow ? 0.62 + 1 + 1.9 : rowF + 1.9;
     const fixed = 44 + 26 + editH + 30;
     let s = Math.min((vw - 12) / 9, 72);
     s = Math.min(s, (vh - fixed) / (9 + 0.95 * k));
     s = Math.max(24, Math.floor(s));
-    const nbh = Math.round(Math.max(34, Math.min(62, s * 0.95)));
+    const nbh = Math.round(Math.max(34, Math.min(62 * rowF, s * 0.95 * rowF)));
     S.cell = s;
     const w = 9 * s;
     document.documentElement.style.setProperty("--w", w + "px");
@@ -1246,7 +1255,7 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const touch = S.input === "touch";
     $("barMouse").style.display = touch ? "none" : "grid";
-    $("barNotes").style.display = touch && !S.regionMode && !S.game.editing ? "grid" : "none";
+    $("barNotes").style.display = notesRow ? "grid" : "none";
     $("barValues").style.display = touch ? "grid" : "none";
     $("editbar").classList.toggle("on", S.game.editing);
   }
@@ -1436,12 +1445,14 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     bn.appendChild(btn("Notiz", "rowlabel"));
     const bv = $("barValues");
     bv.innerHTML = "";
+    const oneRow = settings.touchMode === "one";
     for (let d = 1; d <= 9; d++) {
       const done = count(d) >= 9 && !g.editing;
       let cls = done ? "done" : "";
       if (d === selVal) cls += " sel";
+      else if (oneRow && sel !== null && (selNotes >> d & 1)) cls += " note-on";
       const cnt = g.editing ? "" : `<span class="cnt">${Math.max(0, 9 - count(d))}</span>`;
-      bv.appendChild(btn(`${d}${cnt}`, cls, () => inputDigit(d, false)));
+      bv.appendChild(oneRow ? holdButton(`${d}${cnt}`, cls, d) : btn(`${d}${cnt}`, cls, () => inputDigit(d, false)));
     }
     bv.appendChild(btn(ICONS.eraser, "", erase));
   }
@@ -1554,6 +1565,72 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
       changed = g.toggleNote(i, d);
     } else changed = g.setValue(i, d);
     if (changed) { S.unsure.delete(i); afterChange(); }
+  }
+
+  // ---- Eine Reihe: Antippen = Zahl bzw. Notiz, Gedrückthalten = Zahl
+  function holdButton(html, cls, d) {
+    const b = document.createElement("button");
+    b.innerHTML = html + '<span class="hold"></span>';
+    b.className = cls;
+    let timer = null, fired = false;
+    const bar = b.querySelector(".hold");
+    const stop = () => {
+      clearTimeout(timer); timer = null;
+      bar.style.transition = "none"; bar.style.width = "0";
+    };
+    b.addEventListener("pointerdown", (e) => {
+      if (e.button > 0) return;
+      e.preventDefault();
+      fired = false;
+      bar.style.transition = "none"; bar.style.width = "0";
+      void bar.offsetWidth;                                  // Neustart der Animation erzwingen
+      bar.style.transition = `width ${settings.holdMs}ms linear`; bar.style.width = "100%";
+      timer = setTimeout(() => { timer = null; fired = true; holdDigit(d); }, settings.holdMs);
+    });
+    b.addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      const wasShort = timer !== null && !fired;
+      stop();
+      if (wasShort) tapDigit(d);
+    });
+    b.addEventListener("pointercancel", stop);
+    b.addEventListener("pointerleave", stop);
+    b.addEventListener("contextmenu", (e) => e.preventDefault());
+    return b;
+  }
+
+  function digitTarget() {
+    if (S.regionMode || !playable()) return null;
+    const g = S.game, i = S.selected;
+    if (i === null) { status("Bitte zuerst ein Feld antippen."); return null; }
+    if (g.givens[i]) { status("Vorgegebene Zahlen können nicht geändert werden."); return null; }
+    return i;
+  }
+
+  function tapDigit(d) {
+    const i = digitTarget();
+    if (i === null) return;
+    const g = S.game, v = g.values[i];
+    let changed;
+    if (g.editing) changed = g.setValue(i, d);
+    else if (v && v !== d) {
+      // Zahl + weitere Ziffer -> Notiz mit beiden. War die Zahl der letzte Schritt, wird er
+      // zurückgenommen, damit die aus den Nachbarfeldern entfernten Notizen wiederkommen.
+      const top = g._undo[g._undo.length - 1];
+      if (top && top.some(([j, , nv]) => j === i && nv[0] === v)) g.undo();
+      changed = g._commit(new Map([[i, [0, (1 << v) | (1 << d)]]]));
+    } else if (v) changed = g.setValue(i, d);               // gleiche Zahl nochmals: Feld leeren
+    else if (g.notes[i]) changed = g.toggleNote(i, d);      // Notiz ergänzen oder verkleinern
+    else changed = g.setValue(i, d);                          // leeres Feld: Zahl
+    if (changed) { S.unsure.delete(i); afterChange(); }
+  }
+
+  function holdDigit(d) {
+    const i = digitTarget();
+    if (i === null) return;
+    const g = S.game;
+    if (g.values[i] === d) return;
+    if (g.setValue(i, d)) { S.unsure.delete(i); afterChange(); }
   }
 
   function erase() {
@@ -1890,6 +1967,10 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
       <div class="seg" id="mDiag" style="grid-template-columns:repeat(2,1fr)"><button data-v="shade">hinterlegt</button><button data-v="lines">als Linien</button></div>
       <div style="font-size:13px;color:#666;margin:10px 0 4px">Bedienung</div>
       <div class="seg" id="mInput"><button data-v="auto">automatisch</button><button data-v="mouse">Maus</button><button data-v="touch">Finger</button></div>
+      <div style="font-size:13px;color:#666;margin:10px 0 4px">Eingabe mit dem Finger</div>
+      <div class="seg" id="mTouch" style="grid-template-columns:repeat(2,1fr)"><button data-v="two">Notiz- und Zahlenreihe</button><button data-v="one">eine Reihe</button></div>
+      <div id="mHoldBox" style="font-size:13px;color:#666;margin:10px 0 4px">Gedrückt halten für Zahl (eine Reihe)</div>
+      <div class="seg" id="mHold" style="grid-template-columns:repeat(4,1fr)">${[500, 750, 1000, 1500].map(v => `<button data-v="${v}">${(v / 1000).toLocaleString("de-AT")} s</button>`).join("")}</div>
       <h3>Hilfe</h3>
       <div class="grid3"><button id="mHelp">Bedienung</button><button id="mTech">Lösungs&shy;techniken</button><button id="mClose">Schließen</button></div>
     </div>`;
@@ -1900,6 +1981,8 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
           d.querySelectorAll("#mTabs button").forEach(b => b.classList.toggle("on", +b.dataset.k === tab));
           d.querySelectorAll("#mDiag button").forEach(b => b.classList.toggle("on", b.dataset.v === settings.diagStyle));
           d.querySelectorAll("#mInput button").forEach(b => b.classList.toggle("on", b.dataset.v === settings.input));
+          d.querySelectorAll("#mTouch button").forEach(b => b.classList.toggle("on", b.dataset.v === settings.touchMode));
+          d.querySelectorAll("#mHold button").forEach(b => b.classList.toggle("on", +b.dataset.v === settings.holdMs));
         };
         mark();
         d.querySelectorAll("#mTabs button").forEach(b => b.onclick = () => { tab = +b.dataset.k; settings.lastVariant = tab; saveSettings(); mark(); });
@@ -1920,6 +2003,10 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
         d.querySelectorAll("#mInput button").forEach(b => b.onclick = () => {
           settings.input = b.dataset.v; saveSettings(); S.input = detectInput(); S.hover = null; mark(); layout(); render();
         });
+        d.querySelectorAll("#mTouch button").forEach(b => b.onclick = () => {
+          settings.touchMode = b.dataset.v; saveSettings(); mark(); layout(); render();
+        });
+        d.querySelectorAll("#mHold button").forEach(b => b.onclick = () => { settings.holdMs = +b.dataset.v; saveSettings(); mark(); });
         q("#mHelp").onclick = () => { close(); help(); };
         q("#mTech").onclick = () => { close(); techDialog(); };
         q("#mClose").onclick = close;
@@ -1935,8 +2022,13 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
 • Rechtsklick: Notiz · Zahlenleiste: Ziffer (im Notizmodus Notiz)
 
 MIT DEM FINGER (Handy, Tablet)
-• Feld antippen, dann Ziffer tippen:
-  obere kleine Reihe = Notiz, untere große Reihe = Zahl
+Feld antippen, dann Ziffer tippen. Zwei Arten (Menü → Ansicht):
+• Notiz- und Zahlenreihe: obere kleine Reihe = Notiz,
+  untere große Reihe = Zahl
+• Eine Reihe: Ziffer im leeren Feld = Zahl; eine weitere Ziffer
+  macht daraus Notizen; in Notizen ergänzt bzw. entfernt jede
+  Ziffer die Notiz; Ziffer gedrückt halten (Balken läuft voll) =
+  Zahl eintragen
 • Gleiche Zahl nochmals = Feld leeren, Radierer = löschen
 
 TASTATUR
