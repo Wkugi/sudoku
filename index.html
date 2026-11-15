@@ -136,6 +136,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     <button id="btnRegions">Gebiete malen</button>
     <button id="btnDiag">Diagonalen</button>
     <button id="btnColors">Farben</button>
+    <button id="btnPreview">Bild</button>
     <button id="btnCancelEdit">Abbrechen</button>
   </div>
   <div id="barMouse" class="bar"></div>
@@ -154,6 +155,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
 </div>
 <div id="overlay"></div>
 <div id="print"></div>
+<script>window.SUDOKU_LIB = "";</script>
 <script>
 window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr schwer","5":"Extrem"},"basics":["<b>Zeile<\/b> (waagrecht), <b>Spalte<\/b> (senkrecht), <b>Block<\/b> (3×3-Kasten). Im Bild hinterlegt: Zeile 2, Spalte 7 und Block 7.","<b>Einheit<\/b>: Oberbegriff für Zeile, Spalte oder Block. Jede Einheit enthält jede Ziffer 1–9 genau einmal.","<b>Feldangabe<\/b>: Z5S5 = Zeile 5, Spalte 5 (gelb). Blöcke sind von links oben nach rechts unten von 1 bis 9 nummeriert.","<b>Kandidat<\/b>: eine Ziffer, die in einem leeren Feld nach den bisherigen Einträgen noch möglich ist. Kandidaten werden als kleine Notizen eingetragen (im Programm: Zauberhut → „Kandidaten automatisch eintragen“).","<b>Sich sehen<\/b>: Zwei Felder „sehen sich“, wenn sie in derselben Einheit liegen. Felder, die sich sehen, können nicht dieselbe Ziffer haben.","<b>Starke Verbindung<\/b> (für eine Ziffer d): In einer Einheit gibt es genau zwei Plätze für d. Ist der eine Platz <i>nicht<\/i> d, <i>muss<\/i> der andere d sein. In den Bildern: durchgezogene Linie.","<b>Schwache Verbindung<\/b>: Zwei Felder sehen sich und haben beide d als Kandidaten. Ist der eine d, kann der andere <i>nicht<\/i> d sein. In den Bildern: gestrichelte Linie.","<b>Squiggly-Sudoku<\/b>: Statt der 3×3-Blöcke gibt es neun unregelmäßige <b>Gebiete<\/b> aus je 9 Feldern (dicke Linien). Alle Techniken dieses Dokuments gelten dort genauso – überall, wo „Block“ steht, ist dann das Gebiet gemeint. Dazu kommt das „Gesetz der Überbleibsel“ (Stufe Mittel).","<b>X-Sudoku<\/b> (auch als Squiggly-X): Zusätzlich müssen beide Hauptdiagonalen 1–9 genau einmal enthalten. Die Diagonalen sind einfach zwei weitere Einheiten – alle Techniken gelten mit ihnen. Das Mittelfeld Z5S5 liegt auf beiden Diagonalen und sieht dadurch besonders viele Felder.","<b>Farbsudoku<\/b> (auch als Farbsudoku-X): Die Felder an derselben Stelle ihres Blocks haben dieselbe Farbe – z. B. sind alle Felder links oben in den Blöcken rot. Jede der neun <b>Farbgruppen<\/b> muss 1–9 genau einmal enthalten. Auch die Farbgruppen sind einfach weitere Einheiten, für die alle Techniken gelten.","<b>Ausschluss (Elimination)<\/b>: Fast alle fortgeschrittenen Techniken setzen keine Ziffer direkt, sondern streichen Kandidaten. Danach entstehen meist neue Einzelne."],"basics_board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z5S5":7},"cands":{},"fills":{"Z5S5":"#fff3c4"},"shade":["Z2S1","Z2S2","Z2S3","Z2S4","Z2S5","Z2S6","Z2S7","Z2S8","Z2S9","Z1S7","Z2S7","Z3S7","Z4S7","Z5S7","Z6S7","Z7S7","Z8S7","Z9S7","Z7S1","Z7S2","Z7S3","Z8S1","Z8S2","Z8S3","Z9S1","Z9S2","Z9S3"],"mark":{},"links":[]},"approach":["Zuerst nur mit Einzelnen arbeiten, solange es geht – ohne Notizen, das geht schnell.","Wenn nichts mehr geht: Kandidaten vollständig eintragen und nach jeder gesetzten Ziffer aktuell halten (das Programm streicht Notizen in Zeile, Spalte und Block automatisch).","Techniken immer in der Reihenfolge dieses Dokuments suchen: erst die einfachen. Nach jedem Ausschluss wieder nach Einzelnen schauen.","Erst wenn alle Techniken einer Stufe nichts mehr bringen, zur nächsten Stufe gehen."],"techniques":[{"name":"Nackter Einzelner","english":"Naked Single","level":1,"idea":"In einem Feld ist nur noch eine einzige Ziffer möglich, weil alle anderen acht Ziffern bereits in seiner Zeile, Spalte oder seinem Block stehen.","how":["Ein leeres Feld wählen.","Alle Ziffern sammeln, die in seiner Zeile, Spalte und seinem Block schon stehen.","Fehlt genau eine Ziffer, gehört sie in dieses Feld."],"example":["Für Z5S5: Zeile 5 enthält 1, 2, 3 – Spalte 5 enthält 4, 5, 6 – Block 5 enthält 7 und 9.","Es fehlt nur die <b>8<\/b>, also ist Z5S5 = 8."],"tip":"Bei eingetragenen Kandidaten erkennst du nackte Einzelne sofort: Felder mit nur einer Notiz.","board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z5S1":1,"Z5S2":2,"Z5S9":3,"Z1S5":4,"Z2S5":5,"Z9S5":6,"Z4S4":7,"Z6S6":9},"cands":{"Z5S5":"8"},"fills":{"Z5S5":"#cdeccf"},"shade":["Z5S1","Z5S2","Z5S3","Z5S4","Z5S5","Z5S6","Z5S7","Z5S8","Z5S9","Z1S5","Z2S5","Z3S5","Z4S5","Z5S5","Z6S5","Z7S5","Z8S5","Z9S5","Z4S4","Z4S5","Z4S6","Z5S4","Z5S5","Z5S6","Z6S4","Z6S5","Z6S6"],"mark":{"Z5S5":{"8":"g"}},"links":[]}},{"name":"Versteckter Einzelner","english":"Hidden Single","level":1,"idea":"Eine Ziffer hat in einer Einheit nur noch einen möglichen Platz – auch wenn in diesem Feld sonst noch andere Kandidaten stehen.","how":["Eine Einheit (meist einen Block) und eine Ziffer wählen, die dort noch fehlt.","Für jedes leere Feld der Einheit prüfen, ob die Ziffer in seiner Zeile oder Spalte bereits vorkommt („Strahlen“ der vorhandenen Ziffern verfolgen).","Bleibt nur ein Feld übrig, gehört die Ziffer dorthin."],"example":["Wo kann die <b>7<\/b> in Block 1 stehen? Die 7 in Z2S5 und Z3S8 sperrt die Zeilen 2 und 3, die 7 in Z5S2 und Z8S3 sperrt die Spalten 2 und 3.","Rot: gesperrte oder belegte Felder. Übrig bleibt nur <b>Z1S1 = 7<\/b>."],"tip":"Gehe die Ziffern 1–9 der Reihe nach durch und prüfe jeden Block – das ist die schnellste Methode für den Anfang.","board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z2S5":7,"Z3S8":7,"Z5S2":7,"Z8S3":7,"Z2S2":3,"Z1S3":5},"cands":{"Z1S1":"7"},"fills":{"Z1S1":"#cdeccf","Z1S2":"#fde3e1","Z2S1":"#fde3e1","Z2S3":"#fde3e1","Z3S1":"#fde3e1","Z3S2":"#fde3e1","Z3S3":"#fde3e1"},"shade":["Z2S4","Z2S5","Z2S6","Z2S7","Z2S8","Z2S9","Z3S4","Z3S5","Z3S6","Z3S7","Z3S8","Z3S9","Z4S2","Z5S2","Z6S2","Z7S2","Z8S2","Z9S2","Z4S3","Z5S3","Z6S3","Z7S3","Z8S3","Z9S3"],"mark":{"Z1S1":{"7":"g"}},"links":[]}},{"name":"Block-Linien-Interaktion","english":"Locked Candidates (Pointing / Claiming)","level":2,"idea":"Liegen alle Kandidaten einer Ziffer innerhalb eines Blocks in derselben Zeile (oder Spalte), muss die Ziffer in diesem Block genau dort stehen – also nicht im Rest dieser Zeile. Umgekehrt: Liegen alle Kandidaten einer Ziffer in einer Zeile innerhalb eines Blocks, kann die Ziffer im übrigen Block nicht stehen.","how":["Block wählen und für eine Ziffer alle Kandidaten darin ansehen.","Liegen sie alle in einer Zeile/Spalte („Pointing“): Ziffer in dieser Zeile/Spalte außerhalb des Blocks streichen.","Umgekehrt für eine Zeile/Spalte: Liegen alle Kandidaten in einem Block („Claiming“): Ziffer im restlichen Block streichen."],"example":["In Block 1 kann die <b>4<\/b> nur in Z2S1 oder Z2S3 stehen – beide in Zeile 2.","Damit steht die 4 von Zeile 2 sicher in Block 1: In Z2S5, Z2S8 und Z2S9 wird die 4 gestrichen."],"tip":"Bei Squiggly besonders ergiebig: Gebiete reichen über mehrere Zeilen und Spalten und überschneiden sich deshalb mit vielen von ihnen. Beim X-Sudoku gilt die Technik auch zwischen einer Diagonale und einem Block, einer Zeile oder Spalte: Liegen z. B. alle Kandidaten einer Ziffer im Block 1 auf der Diagonale, wird sie im Rest der Diagonale gestrichen. Beim Farbsudoku entsprechend zwischen einer Farbgruppe und einer Zeile oder Spalte.","board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z1S1":1,"Z1S2":2,"Z1S3":3,"Z3S1":5,"Z3S2":7,"Z3S3":8,"Z2S2":9},"cands":{"Z2S1":"46","Z2S3":"46","Z2S5":"45","Z2S8":"14","Z2S9":"48"},"fills":{},"shade":["Z2S1","Z2S2","Z2S3","Z2S4","Z2S5","Z2S6","Z2S7","Z2S8","Z2S9"],"mark":{"Z2S1":{"4":"g"},"Z2S3":{"4":"g"},"Z2S5":{"4":"x"},"Z2S8":{"4":"x"},"Z2S9":{"4":"x"}},"links":[]}},{"name":"Nacktes Paar","english":"Naked Pair","level":2,"idea":"Zwei Felder einer Einheit haben genau dieselben zwei Kandidaten. Diese beiden Ziffern müssen sich auf diese zwei Felder verteilen – in den übrigen Feldern der Einheit sind sie unmöglich.","how":["Felder mit genau zwei Kandidaten suchen.","Gibt es in derselben Einheit ein zweites Feld mit denselben beiden Kandidaten, liegt ein Paar vor.","Beide Ziffern in allen anderen Feldern dieser Einheit streichen."],"example":["In Zeile 1 haben Z1S2 und Z1S6 nur die Kandidaten <b>3 und 7<\/b>.","Eines der beiden Felder ist 3, das andere 7. Daher: 3 und 7 in Z1S4, Z1S8 und Z1S9 streichen."],"tip":"Liegen die beiden Felder zusätzlich im selben Block, gilt der Ausschluss auch für den Block.","board":{"rows":[0,1,2],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z1S1":4,"Z1S3":6,"Z1S5":2,"Z1S7":8},"cands":{"Z1S2":"37","Z1S6":"37","Z1S4":"135","Z1S8":"579","Z1S9":"357"},"fills":{},"shade":[],"mark":{"Z1S2":{"3":"g","7":"g"},"Z1S6":{"3":"g","7":"g"},"Z1S4":{"3":"x"},"Z1S8":{"7":"x"},"Z1S9":{"3":"x","7":"x"}},"links":[]}},{"name":"Verstecktes Paar","english":"Hidden Pair","level":2,"idea":"Zwei Ziffern kommen in einer Einheit nur noch in denselben zwei Feldern vor. Dann gehören diese beiden Felder diesen zwei Ziffern – alle anderen Kandidaten in diesen Feldern können gestrichen werden.","how":["Für eine Einheit zählen, in wie vielen Feldern jede fehlende Ziffer möglich ist.","Zwei Ziffern mit je genau zwei Plätzen suchen, die in denselben Feldern liegen.","In diesen beiden Feldern alle übrigen Kandidaten streichen. Es entsteht ein nacktes Paar."],"example":["In Spalte 5 kommen <b>2 und 6<\/b> nur in Z3S5 und Z7S5 vor.","Also sind diese zwei Felder 2 und 6: Die 1 und 9 in Z3S5 sowie die 4 und 9 in Z7S5 werden gestrichen."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[3,4,5,6],"givens":{"Z2S5":3,"Z4S5":5,"Z6S5":7,"Z8S5":8},"cands":{"Z3S5":"1269","Z7S5":"2469","Z1S5":"19","Z5S5":"49","Z9S5":"14"},"fills":{},"shade":["Z1S5","Z2S5","Z3S5","Z4S5","Z5S5","Z6S5","Z7S5","Z8S5","Z9S5"],"mark":{"Z3S5":{"2":"g","6":"g","1":"x","9":"x"},"Z7S5":{"2":"g","6":"g","4":"x","9":"x"}},"links":[]}},{"name":"Gesetz der Überbleibsel","english":"Law of Leftovers (nur Squiggly)","level":2,"idea":"Drei benachbarte Zeilen enthalten jede Ziffer genau dreimal – drei ganze Gebiete ebenfalls. Legt man die drei Gebiete, die am stärksten in diesen Zeilen liegen, über die Zeilen, bleiben auf beiden Seiten ein paar Felder übrig: Felder der Zeilen, die zu keinem der Gebiete gehören, und Felder der Gebiete außerhalb der Zeilen. Beide Gruppen enthalten <b>genau dieselben Ziffern<\/b>. Das gilt ebenso für 1, 2, 4 … benachbarte Zeilen oder Spalten mit gleich vielen Gebieten.","how":["k benachbarte Zeilen (oder Spalten) wählen, am besten am Rand: die oberste Zeile, die obersten zwei, drei …","Die k Gebiete suchen, die diese Zeilen fast vollständig ausfüllen.","Überbleibsel markieren: Felder der Zeilen, die in keinem dieser Gebiete liegen – und Felder dieser Gebiete außerhalb der Zeilen. Beide Gruppen sind gleich groß.","Beide Gruppen enthalten dieselben Ziffern: Eine Ziffer, die auf der einen Seite nirgends möglich ist, wird auf der anderen gestrichen. Bei je einem Feld sind beide Felder sogar gleich."],"example":["Zeilen 1–3 und die Gebiete 1, 2, 3 (grün, blau, gelb). Gebiet 1 ragt mit <b>Z4S1<\/b> nach unten heraus, dafür gehört <b>Z3S5<\/b> zu Gebiet 5. Diese beiden Felder (orange) sind die Überbleibsel.","Also haben Z3S5 und Z4S1 <b>dieselbe Ziffer<\/b>. Z4S1 kann nur 4 oder 7 sein – deshalb werden 2 und 9 in Z3S5 gestrichen.","Mit nur einem Feld auf jeder Seite ist das die stärkste Form: Sobald eines der beiden Felder gelöst ist, steht auch das andere fest."],"tip":"Am ergiebigsten sind die Ränder des Rasters. Das Programm prüft 1 bis 4 benachbarte Zeilen und Spalten an jeder Stelle.","board":{"rows":[0,1,2,3,4,5],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z1S1":5,"Z2S8":1,"Z1S6":3},"cands":{"Z3S5":"2479","Z4S1":"47"},"fills":{"Z1S1":"#dcefd0","Z1S2":"#dcefd0","Z1S3":"#dcefd0","Z1S4":"#d9e8fb","Z1S5":"#d9e8fb","Z1S6":"#d9e8fb","Z1S7":"#fff0bf","Z1S8":"#fff0bf","Z1S9":"#fff0bf","Z2S1":"#dcefd0","Z2S2":"#dcefd0","Z2S3":"#dcefd0","Z2S4":"#d9e8fb","Z2S5":"#d9e8fb","Z2S6":"#d9e8fb","Z2S7":"#fff0bf","Z2S8":"#fff0bf","Z2S9":"#fff0bf","Z3S1":"#dcefd0","Z3S2":"#dcefd0","Z3S3":"#d9e8fb","Z3S4":"#d9e8fb","Z3S6":"#d9e8fb","Z3S7":"#fff0bf","Z3S8":"#fff0bf","Z3S9":"#fff0bf","Z4S1":"#ffd27a","Z3S5":"#ffd27a"},"shade":[],"mark":{"Z3S5":{"4":"g","7":"g","2":"x","9":"x"},"Z4S1":{"4":"g","7":"g"}},"links":[],"regions":[0,0,0,1,1,1,2,2,2,0,0,0,1,1,1,2,2,2,0,0,1,1,4,1,2,2,2,0,3,3,3,4,4,5,5,5,3,3,3,4,4,4,5,5,5,3,3,3,4,4,4,5,5,5,6,6,6,7,7,7,8,8,8,6,6,6,7,7,7,8,8,8,6,6,6,7,7,7,8,8,8]}},{"name":"Nacktes Tripel","english":"Naked Triple","level":3,"idea":"Wie das nackte Paar, nur mit drei Feldern: Drei Felder einer Einheit enthalten zusammen nur drei verschiedene Ziffern. Nicht jedes Feld muss alle drei enthalten.","how":["In einer Einheit drei Felder suchen, deren Kandidaten zusammen nur drei Ziffern ergeben (z. B. {1,5}, {5,9}, {1,9}).","Diese drei Ziffern in allen anderen Feldern der Einheit streichen."],"example":["Block 5 (Ausschnitt): Z4S4 {1,5}, Z5S6 {5,9}, Z6S5 {1,9} enthalten zusammen nur <b>1, 5, 9<\/b>.","Diese drei Felder belegen 1, 5 und 9. Daher: 1 und 9 in Z4S6 streichen, 5 in Z6S4 streichen."],"tip":null,"board":{"rows":[3,4,5],"cols":[3,4,5],"givens":{"Z4S5":4,"Z5S5":7},"cands":{"Z4S4":"15","Z5S6":"59","Z6S5":"19","Z4S6":"139","Z6S4":"358","Z5S4":"26"},"fills":{},"shade":["Z4S4","Z4S5","Z4S6","Z5S4","Z5S5","Z5S6","Z6S4","Z6S5","Z6S6"],"mark":{"Z4S4":{"1":"g","5":"g"},"Z5S6":{"5":"g","9":"g"},"Z6S5":{"1":"g","9":"g"},"Z4S6":{"1":"x","9":"x"},"Z6S4":{"5":"x"}},"links":[]}},{"name":"Verstecktes Tripel","english":"Hidden Triple","level":3,"idea":"Drei Ziffern kommen in einer Einheit nur in denselben drei Feldern vor. Diese Felder gehören den drei Ziffern; alle anderen Kandidaten darin werden gestrichen.","how":["Für eine Einheit drei Ziffern suchen, deren Plätze zusammen nur drei Felder ergeben.","In diesen drei Feldern alle Kandidaten außer den drei Ziffern streichen."],"example":["In Zeile 9 stehen <b>2, 4 und 8<\/b> nur in Z9S1, Z9S5 und Z9S7.","Gestrichen werden: 6 in Z9S1, 1 und 9 in Z9S5, 3 in Z9S7."],"tip":"Versteckte Tripel sind schwer zu sehen. Hilfreich ist es, für jede Ziffer die Anzahl der Plätze in der Einheit zu zählen.","board":{"rows":[6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z9S2":5,"Z9S4":7},"cands":{"Z9S1":"246","Z9S5":"1489","Z9S7":"238","Z9S3":"169","Z9S9":"369","Z9S6":"139","Z9S8":"36"},"fills":{},"shade":[],"mark":{"Z9S1":{"2":"g","4":"g","6":"x"},"Z9S5":{"4":"g","8":"g","1":"x","9":"x"},"Z9S7":{"2":"g","8":"g","3":"x"}},"links":[]}},{"name":"X-Wing","english":"X-Wing","level":3,"idea":"Eine Ziffer hat in zwei Zeilen jeweils genau zwei mögliche Plätze, und diese liegen in denselben zwei Spalten (ein Rechteck). Dann steht die Ziffer in diesen beiden Spalten sicher in den beiden Zeilen – egal welche Ecken es sind. In den beiden Spalten kann die Ziffer sonst nirgends stehen.","how":["Eine Ziffer wählen und Zeilen suchen, in denen sie genau zweimal als Kandidat vorkommt.","Zwei solche Zeilen finden, deren Kandidaten in denselben zwei Spalten liegen.","Die Ziffer in diesen zwei Spalten in allen anderen Zeilen streichen.","Dasselbe funktioniert mit vertauschten Rollen (zwei Spalten → Zeilen streichen)."],"example":["Die <b>5<\/b> hat in Zeile 2 und Zeile 7 jeweils nur die Plätze in Spalte 3 und 8.","Entweder Z2S3 + Z7S8 oder Z2S8 + Z7S3 sind 5 – in beiden Fällen sind die Spalten 3 und 8 „versorgt“. Die 5 wird in Z1S3, Z4S3, Z5S8 und Z9S8 gestrichen."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z2S3":"5","Z2S8":"5","Z7S3":"5","Z7S8":"5","Z4S3":"56","Z5S8":"25","Z9S8":"57","Z1S3":"15"},"fills":{},"shade":["Z2S1","Z2S2","Z2S3","Z2S4","Z2S5","Z2S6","Z2S7","Z2S8","Z2S9","Z7S1","Z7S2","Z7S3","Z7S4","Z7S5","Z7S6","Z7S7","Z7S8","Z7S9"],"mark":{"Z2S3":{"5":"g"},"Z2S8":{"5":"g"},"Z7S3":{"5":"g"},"Z7S8":{"5":"g"},"Z4S3":{"5":"x"},"Z5S8":{"5":"x"},"Z9S8":{"5":"x"},"Z1S3":{"5":"x"}},"links":[["Z2S3","Z2S8","s"],["Z7S3","Z7S8","s"],["Z2S3","Z7S3","w"],["Z2S8","Z7S8","w"]]}},{"name":"Swordfish","english":"Swordfish","level":3,"idea":"Die Erweiterung des X-Wings auf drei Zeilen und drei Spalten: Eine Ziffer kommt in drei Zeilen nur in insgesamt drei Spalten vor (je Zeile zwei oder drei Plätze). Dann belegen diese drei Zeilen die Ziffer in den drei Spalten.","how":["Für eine Ziffer Zeilen mit nur zwei oder drei Kandidaten suchen.","Drei solche Zeilen finden, deren Kandidaten zusammen in genau drei Spalten liegen.","Die Ziffer in diesen drei Spalten in allen übrigen Zeilen streichen."],"example":["Die <b>3<\/b>: Zeile 1 → Spalten 2, 7; Zeile 5 → Spalten 2, 5; Zeile 8 → Spalten 5, 7.","Drei Zeilen, zusammen genau drei Spalten (2, 5, 7). Die 3 wird in diesen Spalten sonst gestrichen: Z3S2, Z6S5, Z9S7."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z1S2":"3","Z1S7":"3","Z5S2":"3","Z5S5":"3","Z8S5":"3","Z8S7":"3","Z3S2":"23","Z6S5":"38","Z9S7":"36"},"fills":{},"shade":["Z1S1","Z1S2","Z1S3","Z1S4","Z1S5","Z1S6","Z1S7","Z1S8","Z1S9","Z5S1","Z5S2","Z5S3","Z5S4","Z5S5","Z5S6","Z5S7","Z5S8","Z5S9","Z8S1","Z8S2","Z8S3","Z8S4","Z8S5","Z8S6","Z8S7","Z8S8","Z8S9"],"mark":{"Z1S2":{"3":"g"},"Z1S7":{"3":"g"},"Z5S2":{"3":"g"},"Z5S5":{"3":"g"},"Z8S5":{"3":"g"},"Z8S7":{"3":"g"},"Z3S2":{"3":"x"},"Z6S5":{"3":"x"},"Z9S7":{"3":"x"}},"links":[]}},{"name":"XY-Wing","english":"XY-Wing (Y-Wing)","level":3,"idea":"Drei Felder mit je zwei Kandidaten: ein „Drehpunkt“ {X,Y} und zwei „Flügel“ {X,Z} und {Y,Z}, die den Drehpunkt sehen (sich gegenseitig aber nicht sehen müssen). Egal welche Ziffer der Drehpunkt hat – einer der beiden Flügel wird Z. Felder, die beide Flügel sehen, können daher nicht Z sein.","how":["Ein Feld mit zwei Kandidaten {X,Y} als Drehpunkt wählen.","Zwei Felder mit zwei Kandidaten suchen, die den Drehpunkt sehen: eines mit {X,Z}, eines mit {Y,Z} (gleiches Z).","Z in allen Feldern streichen, die beide Flügel sehen."],"example":["Drehpunkt Z5S5 {4,7}, Flügel Z5S1 {4,9} und Z2S5 {7,9}; Z = <b>9<\/b>.","Ist Z5S5 = 4, wird Z5S1 = 9. Ist Z5S5 = 7, wird Z2S5 = 9. Eine 9 steht also sicher in einem der Flügel.","Z2S1 sieht beide Flügel (Spalte 1 bzw. Zeile 2) → 9 streichen."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z5S5":"47","Z5S1":"49","Z2S5":"79","Z2S1":"29"},"fills":{"Z5S5":"#cfe0f7","Z5S1":"#cdeccf","Z2S5":"#cdeccf"},"shade":[],"mark":{"Z5S5":{"4":"b","7":"b"},"Z5S1":{"9":"g"},"Z2S5":{"9":"g"},"Z2S1":{"9":"x"}},"links":[["Z5S5","Z5S1","w"],["Z5S5","Z2S5","w"]]}},{"name":"XYZ-Wing","english":"XYZ-Wing","level":3,"idea":"Wie der XY-Wing, aber der Drehpunkt hat drei Kandidaten {X,Y,Z}. Dann kann auch der Drehpunkt selbst Z sein. Gestrichen werden darf Z daher nur in Feldern, die alle drei Felder sehen.","how":["Drehpunkt mit drei Kandidaten {X,Y,Z} wählen.","Zwei Flügel {X,Z} und {Y,Z} suchen, die den Drehpunkt sehen.","Z in Feldern streichen, die Drehpunkt und beide Flügel sehen. Das ist meist nur in einem Block möglich."],"example":["Drehpunkt Z2S2 {1,2,6}, Flügel Z2S7 {1,6} (gleiche Zeile) und Z3S1 {2,6} (gleicher Block); Z = <b>6<\/b>.","Eines der drei Felder ist sicher 6. Z2S1 und Z2S3 sehen alle drei (Zeile 2 und Block 1) → 6 dort streichen."],"tip":null,"board":{"rows":[0,1,2,3],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z2S2":"126","Z2S7":"16","Z3S1":"26","Z2S1":"68","Z2S3":"36"},"fills":{"Z2S2":"#cfe0f7","Z2S7":"#cdeccf","Z3S1":"#cdeccf"},"shade":[],"mark":{"Z2S2":{"6":"b"},"Z2S7":{"6":"g"},"Z3S1":{"6":"g"},"Z2S1":{"6":"x"},"Z2S3":{"6":"x"}},"links":[["Z2S2","Z2S7","w"],["Z2S2","Z3S1","w"]]}},{"name":"Nacktes und verstecktes Quadrupel","english":"Naked / Hidden Quad","level":4,"idea":"Die Fortsetzung von Paar und Tripel auf vier Felder: <b>Nackt<\/b> – vier Felder einer Einheit enthalten zusammen nur vier Ziffern → diese Ziffern im Rest der Einheit streichen. <b>Versteckt<\/b> – vier Ziffern kommen nur in denselben vier Feldern vor → in diesen Feldern alle anderen Kandidaten streichen.","how":["Vorgehen wie bei Paar und Tripel, nur mit vier Feldern bzw. vier Ziffern.","Hinweis: Ein nacktes Quadrupel ist immer auch ein verstecktes Tripel/Paar „von der anderen Seite“ – oft ist das kleinere Muster leichter zu finden."],"example":["Zeile 4: Z4S1, Z4S3, Z4S6, Z4S8 enthalten zusammen nur <b>1, 2, 5, 8<\/b>.","Gestrichen werden die 1 in Z4S2 und die 2 in Z4S9."],"tip":null,"board":{"rows":[3,4,5],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z4S4":4,"Z4S5":7,"Z4S7":3},"cands":{"Z4S1":"12","Z4S3":"25","Z4S6":"158","Z4S8":"28","Z4S2":"169","Z4S9":"269"},"fills":{},"shade":[],"mark":{"Z4S1":{"1":"g","2":"g"},"Z4S3":{"2":"g","5":"g"},"Z4S6":{"1":"g","5":"g","8":"g"},"Z4S8":{"2":"g","8":"g"},"Z4S2":{"1":"x"},"Z4S9":{"2":"x"}},"links":[]}},{"name":"Jellyfish","english":"Jellyfish","level":4,"idea":"X-Wing mit vier Zeilen und vier Spalten: Eine Ziffer kommt in vier Zeilen nur in insgesamt vier Spalten vor. In diesen Spalten wird sie in allen anderen Zeilen gestrichen.","how":["Wie beim Swordfish, aber mit vier Zeilen (je zwei bis vier Plätze) und genau vier Spalten.","Die Ziffer in diesen vier Spalten außerhalb der vier Zeilen streichen."],"example":["Die <b>8<\/b> steht in Zeile 1, 3, 6 und 9 nur in den Spalten 2, 4, 6 und 8.","In diesen Spalten wird die 8 in den übrigen Zeilen gestrichen, z. B. in Z5S4 und Z7S2."],"tip":"Jellyfish kommen selten vor. Wenn eine Ziffer überall sehr verstreut ist, lohnt sich eher die Suche nach Ketten.","board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z1S2":"8","Z1S4":"8","Z3S4":"8","Z3S6":"8","Z6S6":"8","Z6S8":"8","Z9S2":"8","Z9S8":"8","Z5S4":"48","Z7S2":"18"},"fills":{},"shade":["Z1S1","Z1S2","Z1S3","Z1S4","Z1S5","Z1S6","Z1S7","Z1S8","Z1S9","Z3S1","Z3S2","Z3S3","Z3S4","Z3S5","Z3S6","Z3S7","Z3S8","Z3S9","Z6S1","Z6S2","Z6S3","Z6S4","Z6S5","Z6S6","Z6S7","Z6S8","Z6S9","Z9S1","Z9S2","Z9S3","Z9S4","Z9S5","Z9S6","Z9S7","Z9S8","Z9S9"],"mark":{"Z1S2":{"8":"g"},"Z1S4":{"8":"g"},"Z3S4":{"8":"g"},"Z3S6":{"8":"g"},"Z6S6":{"8":"g"},"Z6S8":{"8":"g"},"Z9S2":{"8":"g"},"Z9S8":{"8":"g"},"Z5S4":{"8":"x"},"Z7S2":{"8":"x"}},"links":[]}},{"name":"Einfache Färbung","english":"Simple Coloring (Single's Chains)","level":4,"idea":"Man verfolgt für eine Ziffer eine Kette starker Verbindungen (Einheiten mit genau zwei Plätzen) und färbt die Felder abwechselnd in zwei Farben. Genau eine der beiden Farben ist „wahr“ – entweder alle blauen oder alle grünen Felder enthalten die Ziffer.","how":["Ziffer wählen, Einheiten mit genau zwei Plätzen für sie markieren.","Ausgehend von einem Feld entlang dieser Paare abwechselnd blau/grün färben.","<b>Regel „Falle“<\/b>: Ein ungefärbtes Feld, das ein blaues <i>und<\/i> ein grünes Feld sieht, kann die Ziffer nicht haben – eine der Farben ist ja wahr.","<b>Regel „Widerspruch“<\/b>: Sehen sich zwei Felder derselben Farbe, ist diese Farbe falsch – die Ziffer in allen Feldern dieser Farbe streichen (und die andere Farbe setzen)."],"example":["Für die <b>2<\/b> gibt es genau zwei Plätze in Zeile 1 (Z1S1, Z1S6), in Spalte 6 (Z1S6, Z7S6) und in Zeile 7 (Z7S6, Z7S2).","Färbung: blau Z1S1, Z7S6 – grün Z1S6, Z7S2.","Z8S1 sieht das blaue Z1S1 (Spalte 1) und das grüne Z7S2 (Block 7). Welche Farbe auch wahr ist: Z8S1 kann keine 2 sein."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z1S1":"2","Z1S6":"2","Z7S6":"2","Z7S2":"2","Z8S1":"29"},"fills":{"Z1S1":"#cfe0f7","Z7S6":"#cfe0f7","Z1S6":"#cdeccf","Z7S2":"#cdeccf"},"shade":[],"mark":{"Z1S1":{"2":"b"},"Z7S6":{"2":"b"},"Z1S6":{"2":"g"},"Z7S2":{"2":"g"},"Z8S1":{"2":"x"}},"links":[["Z1S1","Z1S6","s"],["Z1S6","Z7S6","s"],["Z7S6","Z7S2","s"]]}},{"name":"W-Wing","english":"W-Wing","level":4,"idea":"Zwei Felder mit denselben zwei Kandidaten {X,Y}, die sich nicht sehen, werden über eine starke Verbindung von X verknüpft. Dann ist mindestens eines der beiden Felder Y.","how":["Zwei gleiche Zweier-Felder {X,Y} suchen, die sich nicht sehen.","Eine Einheit finden, in der X genau zwei Plätze hat, wobei der eine Platz das erste und der andere das zweite Feld sieht.","Y in allen Feldern streichen, die beide Zweier-Felder sehen."],"example":["Z2S2 und Z8S7 sind beide {4,8}. In Zeile 5 hat die 4 nur die Plätze Z5S2 und Z5S7.","Wäre Z2S2 nicht 8, dann wäre es 4. Dann ist Z5S2 nicht 4, also Z5S7 = 4, also ist Z8S7 nicht 4 und damit 8. Eines der beiden ist also <b>8<\/b>.","Die 8 wird in Z2S7 und Z8S2 gestrichen – sie sehen beide Felder."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z2S2":"48","Z8S7":"48","Z5S2":"4","Z5S7":"4","Z2S7":"18","Z8S2":"68"},"fills":{"Z2S2":"#cfe0f7","Z8S7":"#cfe0f7"},"shade":["Z5S1","Z5S2","Z5S3","Z5S4","Z5S5","Z5S6","Z5S7","Z5S8","Z5S9"],"mark":{"Z2S2":{"8":"b","4":"g"},"Z8S7":{"8":"b","4":"g"},"Z5S2":{"4":"g"},"Z5S7":{"4":"g"},"Z2S7":{"8":"x"},"Z8S2":{"8":"x"}},"links":[["Z2S2","Z5S2","w"],["Z5S2","Z5S7","s"],["Z5S7","Z8S7","w"]]}},{"name":"X-Kette","english":"X-Chain (Skyscraper, 2-String Kite, Turbot Fish)","level":4,"idea":"Eine Kette für <i>eine<\/i> Ziffer, in der sich starke und schwache Verbindungen abwechseln. Sie beginnt und endet mit einer starken Verbindung. Dann ist mindestens eines der beiden Enden die Ziffer. Felder, die beide Enden sehen, scheiden aus. Bekannte kurze X-Ketten heißen Skyscraper, 2-String-Kite und Turbot-Fish.","how":["Ziffer wählen und starke Verbindungen markieren (Einheiten mit genau zwei Plätzen).","Starke Verbindungen über schwache Verbindungen (Felder, die sich sehen) aneinanderhängen: stark – schwach – stark – …","Endet die Kette mit einer starken Verbindung: Die Ziffer in allen Feldern streichen, die Anfang und Ende sehen."],"example":["„Skyscraper“ für die <b>6<\/b>: In Spalte 2 nur Z2S2/Z8S2, in Spalte 7 nur Z3S7/Z8S7. Die unteren Enden Z8S2 und Z8S7 sehen sich (Zeile 8).","Höchstens eines der unteren Enden ist 6 – also ist Z2S2 oder Z3S7 eine 6.","Gestrichen wird die 6 in Feldern, die beide oberen Enden sehen: z. B. Z2S9 und Z3S1 (auch Z2S8, Z3S3)."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z2S2":"6","Z8S2":"6","Z8S7":"6","Z3S7":"6","Z2S9":"67","Z3S1":"56"},"fills":{"Z2S2":"#cdeccf","Z3S7":"#cdeccf"},"shade":[],"mark":{"Z2S2":{"6":"g"},"Z3S7":{"6":"g"},"Z8S2":{"6":"b"},"Z8S7":{"6":"b"},"Z2S9":{"6":"x"},"Z3S1":{"6":"x"}},"links":[["Z2S2","Z8S2","s"],["Z8S2","Z8S7","w"],["Z8S7","Z3S7","s"]]}},{"name":"XY-Kette","english":"XY-Chain","level":4,"idea":"Eine Kette aus Feldern mit genau zwei Kandidaten, in der benachbarte Felder sich sehen und eine Ziffer gemeinsam haben. Ist das Anfangsfeld nicht Z, erzwingt die Kette Feld für Feld, dass das Endfeld Z ist. Also ist Anfang oder Ende Z. Der XY-Wing ist die kürzeste XY-Kette.","how":["Mit einem Zweier-Feld {Z,A} beginnen und annehmen: Es ist nicht Z, also A.","Zu einem Zweier-Feld gehen, das dieses sieht und A enthält: Es ist nicht A, also seine andere Ziffer. So weiter.","Erreicht die Kette ein Feld, das dadurch Z wird: Z in allen Feldern streichen, die Anfang und Ende sehen."],"example":["Kette: Z1S1 {1,2} → Z1S5 {2,3} → Z4S5 {3,4} → Z4S9 {4,1}.","Ist Z1S1 nicht 1, ist es 2 → Z1S5 = 3 → Z4S5 = 4 → Z4S9 = <b>1<\/b>. Also ist Z1S1 oder Z4S9 eine 1.","Z1S9 und Z4S1 sehen beide Enden → 1 streichen."],"tip":null,"board":{"rows":[0,1,2,3,4,5],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z1S1":"12","Z1S5":"23","Z4S5":"34","Z4S9":"14","Z1S9":"17","Z4S1":"16"},"fills":{"Z1S1":"#cdeccf","Z1S5":"#cfe0f7","Z4S5":"#cfe0f7","Z4S9":"#cdeccf"},"shade":[],"mark":{"Z1S1":{"1":"g"},"Z4S9":{"1":"g"},"Z1S9":{"1":"x"},"Z4S1":{"1":"x"}},"links":[["Z1S1","Z1S5","w"],["Z1S5","Z4S5","w"],["Z4S5","Z4S9","w"]]}},{"name":"Erzwingungsketten","english":"Forcing Chains, AIC","level":5,"idea":"Man verfolgt von einem Feld (oder einer Einheit) aus <i>alle<\/i> Möglichkeiten. Führen alle Möglichkeiten zum selben Ergebnis, ist dieses Ergebnis sicher.","how":["<b>Feld-Erzwingung<\/b>: Ein Feld hat z. B. die Kandidaten {3,8}. Verfolge die Folgen von „= 3“ und von „= 8“. Wird in beiden Fällen dasselbe Feld 5, ist es sicher 5.","<b>Einheiten-Erzwingung<\/b>: Eine Ziffer hat in einer Einheit mehrere Plätze. Folgt aus jedem Platz dasselbe, gilt es sicher.","<b>Alternierende Ketten (AIC)<\/b>: Verallgemeinerung von X- und XY-Kette. Starke und schwache Verbindungen dürfen beliebig zwischen Ziffern und Feldern wechseln."],"example":["Ketten lassen sich am besten mit eingetragenen Kandidaten und Notizen auf Papier verfolgen. Lange Ketten sind fehleranfällig – nach jedem Schritt prüfen."],"tip":null,"board":null},{"name":"Ausprobieren (Nishio, Verzweigung)","english":"Trial and Error, Bifurcation","level":5,"idea":"Man nimmt für ein Feld mit zwei Kandidaten eine Ziffer an und löst weiter. Führt das zu einem Widerspruch (Feld ohne Kandidaten, Ziffer doppelt), war die Annahme falsch – dann gilt die andere Ziffer.","how":["Ein Feld mit nur zwei Kandidaten wählen. Am besten eines, das viele andere beeinflusst.","Den aktuellen Stand sichern. Im Programm: Rückgängig (Strg+Z) bringt dich zurück.","Eine Ziffer annehmen und mit einfachen Techniken weiterlösen.","Bei einem Widerspruch zurückgehen und die andere Ziffer setzen. Wird das Rätsel ohne Widerspruch gelöst, war die Annahme richtig."],"example":["Puristen lehnen Ausprobieren ab, logisch ist es aber korrekt. Erzwingungsketten sind im Grunde nur geordnetes Ausprobieren."],"tip":null,"board":null}]};
 </script>
@@ -1154,6 +1156,682 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
 
 </script>
 <script>
+/* Sudoku – Bild-Import im Browser. Übertragung von sudoku_app/vision.py:
+ * gleiche Schritte, gleiche Schwellen; Bildoperationen mit OpenCV.js.
+ *
+ *  1. Graustufen, bei dunklem Design invertieren, auf max. 1400 px verkleinern
+ *  2. Raster suchen (Vierecke, Linienraster, Verfeinerung), Güte bewerten
+ *  3. Raster entzerren (576 x 576), binarisieren
+ *  4. Gebiete (Squiggly) aus der Linienstärke, notfalls aus Farben
+ *  5. Farbgruppen (Farbsudoku), Diagonalen (hinterlegt oder Linien)
+ *  6. Ziffern je Feld ausschneiden und mit dem kleinen Netz (MLP) erkennen
+ *
+ * Läuft im Browser (window.SudokuVision) und unter Node (Tests).
+ */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.SudokuVision = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+  const CELL = 64, SIZE = 9 * CELL, INPUT = 28, UNSURE = 0.90;
+  const CLASSIC_REGIONS = Array.from({ length: 81 }, (_, i) => Math.floor(i / 27) * 3 + Math.floor((i % 9) / 3));
+  const COLOR_OF = Array.from({ length: 81 }, (_, i) => (Math.floor(i / 9) % 3) * 3 + i % 3);
+  const DIAG_DOWN = Array.from({ length: 9 }, (_, r) => r * 9 + r);
+  const DIAG_UP = Array.from({ length: 9 }, (_, r) => r * 9 + 8 - r);
+  const DIAG_SET = new Set([...DIAG_DOWN, ...DIAG_UP]);
+
+  class VisionError extends Error {}
+
+  // ------------------------------------------------------------ numpy-Ersatz
+  const sum = (a) => { let s = 0; for (const v of a) s += v; return s; };
+  const mean = (a) => (a.length ? sum(a) / a.length : NaN);
+  function percentile(a, q) {           // wie np.percentile (linear)
+    if (!a.length) return NaN;
+    const s = Float64Array.from(a).sort();
+    const pos = (s.length - 1) * q / 100, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return s[lo] + (s[hi] - s[lo]) * (pos - lo);
+  }
+  const median = (a) => percentile(a, 50);
+  const pyRound = (x) => {               // Python round(): bei .5 zur geraden Zahl
+    const f = Math.floor(x), d = x - f;
+    if (Math.abs(d - 0.5) < 1e-9) return f % 2 === 0 ? f : f + 1;
+    return Math.round(x);
+  };
+  const odd = (n) => Math.max(3, Math.trunc(n) | 1);
+  const argmin = (a, lo = 0, hi = a.length) => { let b = lo; for (let i = lo; i < hi; i++) if (a[i] < a[b]) b = i; return b; };
+
+  // ------------------------------------------------------------ Grundlagen
+  let cv = null;
+
+  function binarize(gray, cell) {
+    const out = new cv.Mat();
+    cv.adaptiveThreshold(gray, out, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, odd(cell * 0.6), 9);
+    return out;
+  }
+
+  function order(pts) {                 // [[x,y] x4] -> oben-links, oben-rechts, unten-rechts, unten-links
+    const s = pts.map(([x, y]) => x + y), d = pts.map(([x, y]) => y - x);
+    const amin = (a) => a.indexOf(Math.min(...a)), amax = (a) => a.indexOf(Math.max(...a));
+    return [pts[amin(s)], pts[amin(d)], pts[amax(s)], pts[amax(d)]].map(p => [Math.fround(p[0]), Math.fround(p[1])]);
+  }
+
+  function perspective(src, dst) {
+    const a = cv.matFromArray(4, 1, cv.CV_32FC2, src.flat());
+    const b = cv.matFromArray(4, 1, cv.CV_32FC2, dst.flat());
+    const m = cv.getPerspectiveTransform(a, b);
+    a.delete(); b.delete();
+    return m;
+  }
+
+  function warp(img, corners, size = SIZE) {
+    const m = perspective(order(corners), [[0, 0], [size - 1, 0], [size - 1, size - 1], [0, size - 1]]);
+    const out = new cv.Mat();
+    cv.warpPerspective(img, out, m, new cv.Size(size, size), size < 600 ? cv.INTER_AREA : cv.INTER_LINEAR);
+    m.delete();
+    return out;
+  }
+
+  function polyArea(q) {
+    let a = 0;
+    for (let i = 0; i < q.length; i++) { const [x1, y1] = q[i], [x2, y2] = q[(i + 1) % q.length]; a += x1 * y2 - x2 * y1; }
+    return Math.abs(a) / 2;
+  }
+
+  function gridScore(gray, corners) {
+    const n = 9 * 24;
+    const w = warp(gray, corners, n);
+    const bm = binarize(w, 24);
+    const b = bm.data;
+    w.delete(); bm.delete();
+    const rowsAny = (lo, hi) => {        // b[lo:hi, :].any(axis=0).mean()
+      let c = 0;
+      for (let x = 0; x < n; x++) { for (let y = lo; y < hi; y++) if (b[y * n + x]) { c++; break; } }
+      return c / n;
+    };
+    const colsAny = (lo, hi) => {        // b[:, lo:hi].any(axis=1).mean()
+      let c = 0;
+      for (let y = 0; y < n; y++) { for (let x = lo; x < hi; x++) if (b[y * n + x]) { c++; break; } }
+      return c / n;
+    };
+    const vals = [];
+    for (let k = 0; k < 10; k++) {
+      const p = Math.min(n - 1, k * 24), lo = Math.max(0, p - 2), hi = Math.min(n, p + 3);
+      vals.push(rowsAny(lo, hi), colsAny(lo, hi));
+    }
+    const inner = [];
+    for (let k = 0; k < 9; k++) {
+      const p = k * 24 + 12;
+      inner.push(rowsAny(p - 1, p + 2), colsAny(p - 1, p + 2));
+    }
+    return mean(vals) - 0.5 * Math.max(0, mean(inner) - 0.3);
+  }
+
+  function matPoints(m) {               // CV_32SC2-Kontur -> [[x,y], ...]
+    const out = [];
+    for (let i = 0; i < m.rows; i++) out.push([m.data32S[2 * i], m.data32S[2 * i + 1]]);
+    return out;
+  }
+
+  function quadCandidates(gray) {
+    const h = gray.rows, w = gray.cols;
+    const b = binarize(gray, Math.max(h, w) / 30);
+    const k = cv.Mat.ones(3, 3, cv.CV_8U);
+    cv.dilate(b, b, k);
+    k.delete();
+    const contours = new cv.MatVector(), hier = new cv.Mat();
+    cv.findContours(b, contours, hier, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+    b.delete(); hier.delete();
+    const list = [];
+    for (let i = 0; i < contours.size(); i++) {
+      const c = contours.get(i);
+      list.push([cv.contourArea(c), c]);
+    }
+    list.sort((a, b2) => b2[0] - a[0]);
+    const out = [];
+    for (const [area, c] of list.slice(0, 25)) {
+      if (area < 0.05 * h * w) break;
+      const peri = cv.arcLength(c, true);
+      for (const eps of [0.02, 0.04]) {
+        const approx = new cv.Mat();
+        cv.approxPolyDP(c, approx, eps * peri, true);
+        const ok = approx.rows === 4 && cv.isContourConvex(approx);
+        const pts = ok ? matPoints(approx) : null;
+        approx.delete();
+        if (ok) {
+          const q = order(pts);
+          const sides = [0, 1, 2, 3].map(i => Math.hypot(q[i][0] - q[(i + 1) % 4][0], q[i][1] - q[(i + 1) % 4][1]));
+          if (Math.min(...sides) / Math.max(...sides) > 0.4) out.push(q);
+          break;
+        }
+      }
+    }
+    for (const [, c] of list) c.delete();
+    contours.delete();
+    return out;
+  }
+
+  function linePositions(mask, axis, length) {
+    // axis 1: Summe je Zeile, axis 0: Summe je Spalte
+    const w = mask.cols, h = mask.rows, d = mask.data;
+    const n = axis === 1 ? h : w;
+    const prof = new Float64Array(n);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[y * w + x]) prof[axis === 1 ? y : x] += d[y * w + x] / 255;
+    const thr = 0.25 * length, lines = [];
+    for (let i = 0; i < n; i++) {
+      if (!(prof[i] > thr)) continue;
+      const last = lines[lines.length - 1];
+      if (last && i - last[last.length - 1] <= 2) last.push(i); else lines.push([i]);
+    }
+    return lines.map(mean);
+  }
+
+  function bestSpacing(pos) {
+    let best = null, bestKey = null;
+    for (let i = 0; i < pos.length; i++) {
+      for (let j = pos.length - 1; j > i; j--) {
+        const a = pos[i], b = pos[j], step = (b - a) / 9;
+        if (step < 8) continue;
+        const tol = Math.max(2.0, step * 0.12);
+        let hits = 0;
+        for (let k = 0; k < 10; k++) {
+          let m = Infinity;
+          for (const p of pos) m = Math.min(m, Math.abs(p - (a + k * step)));
+          if (m <= tol) hits++;
+        }
+        const key = [hits, b - a];
+        if (hits >= 8 && (bestKey === null || key[0] > bestKey[0] || (key[0] === bestKey[0] && key[1] > bestKey[1]))) {
+          best = [a, b]; bestKey = key;
+        }
+      }
+    }
+    return best;
+  }
+
+  function lineCandidates(gray) {
+    const h = gray.rows, w = gray.cols;
+    const b = binarize(gray, Math.max(h, w) / 30);
+    const hor = new cv.Mat(), ver = new cv.Mat();
+    const kh = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(Math.max(10, Math.floor(w / 14)), 1));
+    const kv = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(1, Math.max(10, Math.floor(h / 14))));
+    cv.morphologyEx(b, hor, cv.MORPH_OPEN, kh);
+    cv.morphologyEx(b, ver, cv.MORPH_OPEN, kv);
+    const ys = bestSpacing(linePositions(hor, 1, w * 0.5));
+    const xs = bestSpacing(linePositions(ver, 0, h * 0.5));
+    [b, hor, ver, kh, kv].forEach(m => m.delete());
+    if (!ys || !xs) return [];
+    const [y0, y1] = ys, [x0, x1] = xs;
+    const ratio = (x1 - x0) / Math.max(1, y1 - y0);
+    if (!(0.75 < ratio && ratio < 1.33)) return [];
+    return [[[x0, y0], [x1, y0], [x1, y1], [x0, y1]].map(p => [Math.fround(p[0]), Math.fround(p[1])])];
+  }
+
+  function refine(gray, quad) {
+    const q = order(quad);
+    const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+    const wd = Math.trunc(Math.fround(Math.max(dist(q[1], q[0]), dist(q[2], q[3]))));
+    const ht = Math.trunc(Math.fround(Math.max(dist(q[3], q[0]), dist(q[2], q[1]))));
+    if (Math.min(wd, ht) < 90) return [];
+    const m = perspective(q, [[0, 0], [wd - 1, 0], [wd - 1, ht - 1], [0, ht - 1]]);
+    const rect = new cv.Mat();
+    cv.warpPerspective(gray, rect, m, new cv.Size(wd, ht));
+    const inv = new cv.Mat();
+    cv.invert(m, inv);
+    const M = inv.data64F;
+    const back = ([x, y]) => {
+      const z = M[6] * x + M[7] * y + M[8];
+      return [Math.fround((M[0] * x + M[1] * y + M[2]) / z), Math.fround((M[3] * x + M[4] * y + M[5]) / z)];
+    };
+    const out = lineCandidates(rect).map(c => c.map(back));
+    m.delete(); rect.delete(); inv.delete();
+    return out;
+  }
+
+  function findGrid(gray) {
+    const h = gray.rows, w = gray.cols;
+    const quads = quadCandidates(gray);
+    let cands = quads.concat(lineCandidates(gray));
+    for (const q of quads.slice(0, 6)) cands = cands.concat(refine(gray, q));
+    cands.push([[0, 0], [w - 1, 0], [w - 1, h - 1], [0, h - 1]]);
+    let best = null, bestScore = -1, bestRaw = -1;
+    for (const q of cands) {
+      const sc = gridScore(gray, q);
+      const adj = sc + 0.02 * polyArea(q) / (h * w);
+      if (adj > bestScore) { best = q; bestScore = adj; bestRaw = adj; }
+    }
+    return [best, bestRaw];
+  }
+
+  // ------------------------------------------------------------ Felder lesen
+  function extractDigit(binary, r, c) {
+    // Feld (CELL x CELL) aus dem binarisierten, entzerrten Raster
+    const m = Math.trunc(CELL * 0.1);
+    const rw = CELL - 2 * m, rh = CELL - 2 * m;
+    const roi = binary.roi(new cv.Rect(c * CELL + m, r * CELL + m, rw, rh));
+    const roiCopy = roi.clone();
+    roi.delete();
+    const k = Math.max(2, Math.trunc(CELL * 0.05));
+    const kern = cv.Mat.ones(k, k, cv.CV_8U);
+    const grouped = new cv.Mat();
+    cv.morphologyEx(roiCopy, grouped, cv.MORPH_CLOSE, kern);
+    kern.delete();
+    const labels = new cv.Mat(), stats = new cv.Mat(), cent = new cv.Mat();
+    const n = cv.connectedComponentsWithStats(grouped, labels, stats, cent, 8, cv.CV_32S);
+    grouped.delete();
+    const S = stats.data32S, Cn = cent.data64F;
+    let best = -1, bestD = null;
+    for (let i = 1; i < n; i++) {
+      const x = S[i * 5], y = S[i * 5 + 1], w = S[i * 5 + 2], h = S[i * 5 + 3], area = S[i * 5 + 4];
+      if (h < 0.30 * CELL || h > 0.92 * CELL || area < 0.010 * CELL * CELL) continue;
+      if (w > 0.8 * CELL) continue;
+      const touches = x <= 0 || y <= 0 || x + w >= rw || y + h >= rh;
+      if (touches && (w < 0.1 * CELL || h < 0.1 * CELL)) continue;
+      const d = Math.hypot(Cn[i * 2] - rw / 2, Cn[i * 2 + 1] - rh / 2);
+      if (d > 0.3 * CELL) continue;
+      if (bestD === null || d < bestD) { best = i; bestD = d; }
+    }
+    let result = null;
+    if (best >= 0) {
+      const x = S[best * 5], y = S[best * 5 + 1], w = S[best * 5 + 2], h = S[best * 5 + 3];
+      const L = labels.data32S, R = roiCopy.data;
+      let x0 = Infinity, x1 = -1, y0 = Infinity, y1 = -1;
+      for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) {
+        const j = yy * rw + xx;
+        if (L[j] === best && R[j] > 0) { x0 = Math.min(x0, xx); x1 = Math.max(x1, xx); y0 = Math.min(y0, yy); y1 = Math.max(y1, yy); }
+      }
+      if (x1 >= 0) {
+        const dw = x1 - x0 + 1, dh = y1 - y0 + 1;
+        const digit = new cv.Mat(dh, dw, cv.CV_8U);
+        for (let yy = 0; yy < dh; yy++) for (let xx = 0; xx < dw; xx++) {
+          const j = (yy + y0) * rw + xx + x0;
+          digit.data[yy * dw + xx] = L[j] === best && R[j] > 0 ? 255 : 0;
+        }
+        result = normalize(digit);
+        digit.delete();
+      }
+    }
+    labels.delete(); stats.delete(); cent.delete(); roiCopy.delete();
+    return result;
+  }
+
+  function normalize(digit) {
+    const h = digit.rows, w = digit.cols, s = 20.0 / Math.max(h, w);
+    const nw = Math.max(1, pyRound(w * s)), nh = Math.max(1, pyRound(h * s));
+    const small = new cv.Mat();
+    cv.resize(digit, small, new cv.Size(nw, nh), 0, 0, cv.INTER_AREA);
+    const out = new Float32Array(INPUT * INPUT);
+    const x0 = Math.floor((INPUT - nw) / 2), y0 = Math.floor((INPUT - nh) / 2);
+    for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) out[(y + y0) * INPUT + x + x0] = small.data[y * nw + x] / 255;
+    small.delete();
+    return out;
+  }
+
+  // ------------------------------------------------------------ Netz
+  // Gewichte: float32 little endian, Base64; Reihenfolge W0,b0,W1,b1,W2,b2 (Formen in shapes)
+  function loadModel(model) {
+    const bin = typeof atob === "function" ? atob(model.data) : Buffer.from(model.data, "base64").toString("binary");
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const f = new Float32Array(bytes.buffer);
+    let off = 0;
+    const layers = [];
+    for (const [rows, cols] of model.shapes) {
+      const W = f.subarray(off, off + rows * cols); off += rows * cols;
+      const b = f.subarray(off, off + cols); off += cols;
+      layers.push({ rows, cols, W, b });
+    }
+    return layers;
+  }
+
+  function predict(layers, x) {            // x: Float32Array(784) -> 9 Wahrscheinlichkeiten
+    let a = x;
+    layers.forEach((L, li) => {
+      const out = new Float32Array(L.cols);
+      for (let j = 0; j < L.cols; j++) out[j] = L.b[j];
+      for (let i = 0; i < L.rows; i++) {
+        const ai = a[i];
+        if (!ai) continue;
+        const row = i * L.cols;
+        for (let j = 0; j < L.cols; j++) out[j] += ai * L.W[row + j];
+      }
+      if (li < layers.length - 1) for (let j = 0; j < L.cols; j++) if (out[j] < 0) out[j] = 0;
+      a = out;
+    });
+    const mx = Math.max(...a), e = Array.from(a, v => Math.exp(v - mx)), s = sum(e);
+    return e.map(v => v / s);
+  }
+
+  // ------------------------------------------------------------ Gebiete
+  function edgeInk(gray) {                // gray: entzerrt, CV_8U SIZE x SIZE
+    const g = gray.data, W = SIZE, R = 15, inset = Math.trunc(CELL * 0.22);
+    const profiles = (getter, len) => {   // Streifen: len Werte entlang, 2R+1 quer
+      const line = new Float64Array(2 * R + 1), bright = new Float64Array(2 * R + 1);
+      for (let q = 0; q <= 2 * R; q++) {
+        const col = [];
+        for (let t = 0; t < len; t++) col.push(getter(t, q));
+        line[q] = median(col); bright[q] = percentile(col, 90);
+      }
+      return [line, bright];
+    };
+    const peak = (line, lo, hi) => argmin(line, lo, hi + 1);
+    const inkAt = (line, bright, pk) => {
+      const left = Array.from(bright.slice(Math.max(0, pk - 9), pk - 4));
+      const right = Array.from(bright.slice(pk + 5, pk + 10));
+      const ref = Math.min(left.length ? median(left) : 255, right.length ? median(right) : 255);
+      let ink = 0;
+      for (let q = pk - 2; q < pk + 3; q++) ink += Math.max(0, ref - line[q]);
+      return ink / Math.max(ref, 1.0) * 100;
+    };
+    const len = CELL - 2 * inset;
+    const vert = Array.from({ length: 9 }, () => new Array(8).fill(0));
+    const hor = Array.from({ length: 8 }, () => new Array(9).fill(0));
+    for (let k = 0; k < 8; k++) {
+      for (const isV of [true, false]) {
+        const profs = [];
+        for (let j = 0; j < 9; j++) {
+          const p = (k + 1) * CELL;
+          const getter = isV
+            ? (t, q) => g[(j * CELL + inset + t) * W + p - R + q]
+            : (t, q) => g[(p - R + q) * W + j * CELL + inset + t];
+          profs.push(profiles(getter, len));
+        }
+        const centre = Math.trunc(median(profs.map(([line]) => peak(line, R - 6, R + 6))));
+        profs.forEach(([line, bright], j) => {
+          const val = inkAt(line, bright, peak(line, centre - 2, centre + 2));
+          if (isV) vert[j][k] = val; else hor[k][j] = val;
+        });
+      }
+    }
+    return [vert, hor];
+  }
+
+  function classicPlausible(vert, hor) {
+    const box = [], other = [];
+    for (let r = 0; r < 9; r++) for (let c = 0; c < 8; c++) (c === 2 || c === 5 ? box : other).push(vert[r][c]);
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 9; c++) (r === 2 || r === 5 ? box : other).push(hor[r][c]);
+    // Reihenfolge wie numpy-Masken (zeilenweise) – für Median egal
+    const mb = median(box), mo = median(other);
+    if (mb < 1.4 * mo) return false;
+    const mid = (mb + mo) / 2;
+    return box.filter(v => v < mid).length + other.filter(v => v > mid).length <= 3;
+  }
+
+  function cellColors(lab) {               // lab: entzerrt, CV_8UC3 (Lab)
+    const d = lab.data, a = Math.trunc(CELL * 0.12), b = Math.trunc(CELL * 0.28);
+    const out = [];
+    for (let i = 0; i < 81; i++) {
+      const r = Math.floor(i / 9), c = i % 9, ch = [[], [], []];
+      for (let y = a; y < CELL - a; y++) for (let x = a; x < CELL - a; x++) {
+        if (y >= b && y < CELL - b && x >= b && x < CELL - b) continue;
+        const j = ((r * CELL + y) * SIZE + c * CELL + x) * 3;
+        ch[0].push(d[j]); ch[1].push(d[j + 1]); ch[2].push(d[j + 2]);
+      }
+      out.push(ch.map(median));
+    }
+    return out;
+  }
+  const norm3 = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+
+  function components(bv, bh) {
+    const parent = Array.from({ length: 81 }, (_, i) => i);
+    const find = (x) => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+    for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
+      const i = r * 9 + c;
+      if (c < 8 && !bv[r][c]) parent[find(i)] = find(i + 1);
+      if (r < 8 && !bh[r][c]) parent[find(i)] = find(i + 9);
+    }
+    const ids = new Map();
+    return Array.from({ length: 81 }, (_, i) => {
+      const x = find(i);
+      if (!ids.has(x)) ids.set(x, ids.size);
+      return ids.get(x);
+    });
+  }
+  const valid = (reg) => Math.max(...reg) === 8 && [0, 1, 2, 3, 4, 5, 6, 7, 8].every(g => reg.filter(v => v === g).length === 9);
+  const sameArr = (a, b) => a.every((v, i) => v === b[i]);
+
+  function otsu(values) {
+    const v = Float64Array.from(values).sort();
+    let best = -1, bestT = null;
+    for (let k = 1; k < v.length; k++) {
+      const lo = v.subarray(0, k), hi = v.subarray(k);
+      const between = lo.length * hi.length * (mean(lo) - mean(hi)) ** 2;
+      if (between > best) { best = between; bestT = (v[k - 1] + v[k]) / 2; }
+    }
+    return bestT;
+  }
+
+  function mergeToNine(regions) {
+    let reg = regions.slice();
+    while (Math.max(...reg) > 8) {
+      const sizes = new Map();
+      for (const g of reg) sizes.set(g, (sizes.get(g) || 0) + 1);
+      let small = null;
+      for (const [g, n] of sizes) if (small === null || n < sizes.get(small)) small = g;
+      const nb = new Map();
+      for (let i = 0; i < 81; i++) {
+        if (reg[i] !== small) continue;
+        const r = Math.floor(i / 9), c = i % 9;
+        const js = [...(r ? [i - 9] : []), ...(r < 8 ? [i + 9] : []), ...(c ? [i - 1] : []), ...(c < 8 ? [i + 1] : [])];
+        for (const j of js) if (reg[j] !== small) nb.set(reg[j], (nb.get(reg[j]) || 0) + 1);
+      }
+      let target = 0;
+      if (nb.size) { let bn = -1; for (const [g, n] of nb) if (n > bn) { bn = n; target = g; } }
+      reg = reg.map(g => (g === small ? target : g));
+      const ids = new Map();
+      reg = reg.map(g => { if (!ids.has(g)) ids.set(g, ids.size); return ids.get(g); });
+    }
+    return reg;
+  }
+
+  function detectRegions(gray, lab) {
+    const [vert, hor] = edgeInk(gray);
+    const values = [...vert.flat(), ...hor.flat()];
+    const thr = otsu(values);
+    const hi = values.filter(v => v > thr), lo = values.filter(v => v <= thr);
+    const separated = hi.length >= 10 && mean(hi) >= mean(lo) * 1.6;
+    const classicOk = classicPlausible(vert, hor);
+    if (!separated) return [CLASSIC_REGIONS.slice(), true];
+    const v = Float64Array.from(values).sort();
+    const gaps = [];
+    for (let k = 10; k < v.length - 10; k++) gaps.push([Math.log(v[k + 1] + 1) - Math.log(v[k] + 1), (v[k] + v[k + 1]) / 2]);
+    gaps.sort((a, b) => b[0] - a[0] || b[1] - a[1]);
+    const candidates = gaps.slice(0, 15).map(([, t]) => t).concat([thr]);
+    const gt = (m, t) => m.map(row => row.map(x => x > t));
+    let first = null;
+    for (const t of candidates) {
+      const reg = components(gt(vert, t), gt(hor, t));
+      if (first === null) first = reg;
+      if (valid(reg)) {
+        if (!sameArr(reg, CLASSIC_REGIONS) && classicOk) continue;
+        return [reg, true];
+      }
+    }
+    if (classicOk) return [CLASSIC_REGIONS.slice(), true];
+    if (lab) {
+      const col = cellColors(lab);
+      const dv = Array.from({ length: 9 }, (_, r) => Array.from({ length: 8 }, (_, c) => norm3(col[r * 9 + c], col[r * 9 + c + 1])));
+      const dh = Array.from({ length: 8 }, (_, r) => Array.from({ length: 9 }, (_, c) => norm3(col[r * 9 + c], col[r * 9 + c + 9])));
+      if (Math.max(...dv.flat(), ...dh.flat()) > 12) {
+        for (const ct of [25, 18, 12, 35]) {
+          let reg = components(vert.map((row, r) => row.map((x, c) => x > thr || dv[r][c] > ct)),
+            hor.map((row, r) => row.map((x, c) => x > thr || dh[r][c] > ct)));
+          if (valid(reg)) return [reg, true];
+          reg = components(gt(dv, ct), gt(dh, ct));
+          if (valid(reg)) return [reg, false];
+        }
+      }
+    }
+    return [mergeToNine(first), false];
+  }
+
+  // ------------------------------------------------------------ Farbsudoku
+  function detectColorGroups(lab, regions) {
+    if (!lab || !sameArr(regions, CLASSIC_REGIONS)) return false;
+    const col = cellColors(lab);
+    const means = [], spread = [];
+    for (let k = 0; k < 9; k++) {
+      const cells = [];
+      for (let i = 0; i < 81; i++) if (COLOR_OF[i] === k) cells.push(i);
+      let core = cells.filter(i => !DIAG_SET.has(i));
+      if (!core.length) core = cells;
+      const m = [0, 1, 2].map(ch => median(core.map(i => col[i][ch])));
+      means.push(m);
+      spread.push(median(core.map(i => norm3(col[i], m))));
+    }
+    const pair = [];
+    for (let i = 0; i < 9; i++) for (let j = i + 1; j < 9; j++) pair.push(norm3(means[i], means[j]));
+    const chroma = means.map(m => Math.hypot(m[1] - 128, m[2] - 128));
+    const sep = median(pair);
+    return sep > 18 && median(spread) < Math.max(6, sep / 4) && Math.max(...spread) < Math.max(12, sep / 3)
+      && pair.filter(p => p > 7).length / pair.length > 0.9 && median(chroma) > 8;
+  }
+
+  // ------------------------------------------------------------ Diagonalen
+  function cellBackgrounds(gray) {
+    const g = gray.data, a = Math.trunc(CELL * 0.1), b = Math.trunc(CELL * 0.3), out = [];
+    for (let i = 0; i < 81; i++) {
+      const r = Math.floor(i / 9), c = i % 9, vals = [];
+      for (let y = a; y < CELL - a; y++) for (let x = a; x < CELL - a; x++) {
+        if (y >= b && y < CELL - b && x >= b && x < CELL - b) continue;
+        vals.push(g[(r * CELL + y) * SIZE + c * CELL + x]);
+      }
+      out.push(percentile(vals, 75));
+    }
+    return out;
+  }
+
+  const linspace = (a, b, n) => Array.from({ length: n }, (_, k) => a + (b - a) * k / (n - 1));
+
+  function diagDarkness(gray, i, down) {
+    const g = gray.data, r = Math.floor(i / 9), c = i % 9;
+    const px = (y, x) => g[(r * CELL + y) * SIZE + c * CELL + x];
+    const all = [];
+    for (let y = 0; y < CELL; y++) for (let x = 0; x < CELL; x++) all.push(px(y, x));
+    const bg = percentile(all, 75), vals = [];
+    for (const t of [...linspace(0.08, 0.3, 8), ...linspace(0.7, 0.92, 8)]) {
+      const y = Math.trunc(t * CELL);
+      const x = down ? Math.trunc(t * CELL) : Math.trunc((1 - t) * CELL) - 1;
+      let m = Infinity;
+      for (let yy = Math.max(0, y - 2); yy < Math.min(CELL, y + 3); yy++)
+        for (let xx = Math.max(0, x - 2); xx < Math.min(CELL, x + 3); xx++) m = Math.min(m, px(yy, xx));
+      vals.push(bg - m);
+    }
+    return median(vals);
+  }
+
+  function detectDiagonal(gray, regions, colors) {
+    const cells = [...DIAG_SET].filter(i => i !== 40);
+    const bg = cellBackgrounds(gray), group = colors ? COLOR_OF : regions;
+    const diffs = cells.map(i => {
+      const same = [];
+      for (let j = 0; j < 81; j++) if (group[j] === group[i] && !DIAG_SET.has(j)) same.push(bg[j]);
+      return same.length ? median(same) - bg[i] : 0;
+    });
+    const shaded = median(diffs) >= 6 && diffs.filter(d => d >= 3).length / diffs.length >= 0.75;
+    const scores = cells.map(i => {
+      const down = DIAG_DOWN.includes(i);
+      return diagDarkness(gray, i, down) - diagDarkness(gray, i, !down);
+    });
+    const lined = median(scores) >= 18 && scores.filter(s => s >= 10).length / scores.length >= 0.75;
+    return [shaded || lined, lined];
+  }
+
+  function removeDiagonalLines(binary, gray) {
+    const g = gray.data, b = binary.data;
+    const t = Array.from({ length: CELL }, (_, k) => k);
+    const cornerT = [...t.slice(2, Math.trunc(CELL * 0.25)), ...t.slice(Math.trunc(CELL * 0.75), CELL - 2)];
+    for (const [down, cells] of [[true, DIAG_DOWN], [false, DIAG_UP]]) {
+      for (const i of cells) {
+        const r = Math.floor(i / 9), c = i % 9;
+        const at = (y, x) => (r * CELL + y) * SIZE + c * CELL + x;
+        const xs = (off, ts) => ts.map(tt => Math.min(CELL - 1, Math.max(0, (down ? tt : CELL - 1 - tt) + off)));
+        let best = null, bestV = Infinity;
+        for (let off = -6; off <= 6; off++) {
+          const x = xs(off, cornerT);
+          const v = median(cornerT.map((y, k) => g[at(y, x[k])]));
+          if (v < bestV) { bestV = v; best = off; }
+        }
+        const lineGray = bestV;
+        for (let d = -3; d <= 3; d++) {
+          const x = xs(best + d, t);
+          t.forEach((y, k) => { if (g[at(y, x[k])] > lineGray - 25) b[at(y, x[k])] = 0; });
+        }
+      }
+    }
+  }
+
+  // ------------------------------------------------------------ Hauptfunktion
+  /** cvModule: geladenes OpenCV.js; image: {width, height, data: RGBA}; model: {shapes, data} */
+  function recognize(cvModule, image, model) {
+    cv = cvModule;
+    const layers = loadModel(model);
+    const rgba = cv.matFromImageData(image);
+    let gray = new cv.Mat(), color = new cv.Mat();
+    cv.cvtColor(rgba, gray, cv.COLOR_RGBA2GRAY);
+    cv.cvtColor(rgba, color, cv.COLOR_RGBA2RGB);
+    rgba.delete();
+    const toDelete = [];
+    try {
+      // dunkles Design: invertieren (Median über das ganze Bild)
+      const hist = new Uint32Array(256);
+      for (const v of gray.data) hist[v]++;
+      const total = gray.rows * gray.cols;
+      const cum = (k) => { let s = 0, i = 0; for (; i < 256; i++) { s += hist[i]; if (s > k) return i; } return 255; };
+      const med = total % 2 ? cum((total - 1) / 2) : (cum(total / 2 - 1) + cum(total / 2)) / 2;
+      if (med < 110) cv.bitwise_not(gray, gray);
+      const h = gray.rows, w = gray.cols, scale = 1400 / Math.max(h, w);
+      if (scale < 1) {
+        const size = new cv.Size(pyRound(w * scale), pyRound(h * scale));
+        const g2 = new cv.Mat(), c2 = new cv.Mat();
+        cv.resize(gray, g2, size, 0, 0, cv.INTER_AREA);
+        cv.resize(color, c2, size, 0, 0, cv.INTER_AREA);
+        gray.delete(); color.delete();
+        gray = g2; color = c2;
+      }
+      toDelete.push(gray, color);
+      const [corners, score] = findGrid(gray);
+      if (!corners || score < 0.5) {
+        throw new VisionError("Im Bild wurde kein Sudoku-Raster gefunden.\nTipp: Das Raster sollte möglichst bildfüllend und gerade sein.");
+      }
+      const warped = warp(gray, corners);
+      const binary = binarize(warped, CELL);
+      const warpedRgb = warp(color, corners);
+      const lab = new cv.Mat();
+      cv.cvtColor(warpedRgb, lab, cv.COLOR_RGB2Lab);
+      toDelete.push(warped, binary, warpedRgb, lab);
+      const [regions, sure] = detectRegions(warped, lab);
+      const squiggly = !sameArr(regions, CLASSIC_REGIONS);
+      const colors = detectColorGroups(lab, regions);
+      const [diagonal, lined] = detectDiagonal(warped, sure ? regions : CLASSIC_REGIONS, colors);
+      if (lined) removeDiagonalLines(binary, warped);
+      const grid = new Array(81).fill(0), conf = new Array(81).fill(1.0);
+      for (let i = 0; i < 81; i++) {
+        const d = extractDigit(binary, Math.floor(i / 9), i % 9);
+        if (!d) continue;
+        const p = predict(layers, d);
+        let k = 0;
+        for (let j = 1; j < 9; j++) if (p[j] > p[k]) k = j;
+        grid[i] = k + 1; conf[i] = p[k];
+      }
+      const unsure = [];
+      for (let i = 0; i < 81; i++) if (conf[i] < UNSURE) unsure.push(i);
+      if (lined) for (const i of DIAG_SET) if (grid[i] && conf[i] < 0.5) grid[i] = 0;
+      // entzerrtes Farbbild zum Vergleichen in der Oberfläche
+      const pv = new cv.Mat();
+      cv.cvtColor(warpedRgb, pv, cv.COLOR_RGB2RGBA);
+      const preview = { width: SIZE, height: SIZE, data: new Uint8ClampedArray(pv.data) };
+      pv.delete();
+      return { grid, confidence: conf, unsure, score, squiggly, regions, regionsSure: sure, diagonal, colors, corners, preview };
+    } finally {
+      for (const m of toDelete) if (!m.isDeleted()) m.delete();
+    }
+  }
+
+  return { recognize, VisionError, CELL, UNSURE };
+});
+
+</script>
+<script>
 /* Sudoku – Web-Oberfläche. Raster auf einem Canvas (wie die PC-Version),
  * Zahlenleisten und Werkzeugleiste als Schaltflächen.
  *
@@ -1266,6 +1944,10 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
   function drawBoard() {
     const s = S.cell, g = S.game, W = 9 * s;
     ctx.clearRect(0, 0, W, W);
+    if (S.showPreview && S.preview && g.editing) {        // Foto zum Vergleichen
+      ctx.drawImage(S.preview, 0, 0, W, W);
+      return;
+    }
     const hide = S.paused || S.generating;
     const selVal = S.selected !== null && !hide ? g.values[S.selected] : 0;
     const reg = g.regionMap();
@@ -1348,7 +2030,7 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     if (hide) {
       ctx.fillStyle = COL.overlay; ctx.fillRect(w, w, W - 2 * w, W - 2 * w);
       ctx.fillStyle = COL.status; ctx.font = font(s * 0.45);
-      ctx.fillText(S.generating ? "Erzeuge Rätsel …" : "Pause", W / 2, W / 2 - (S.generating ? 0 : s * 0.3));
+      ctx.fillText(S.generating ? (S.busyText || "Erzeuge Rätsel …") : "Pause", W / 2, W / 2 - (S.generating ? 0 : s * 0.3));
       if (!S.generating) { ctx.font = font(s * 0.28); ctx.fillText("Tippen zum Fortsetzen", W / 2, W / 2 + s * 0.45); }
     }
   }
@@ -1474,6 +2156,9 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     const db = $("btnDiag");
     db.classList.toggle("active", g.editDiagonals);
     db.textContent = g.editDiagonals ? "✓ Diagonalen" : "Diagonalen";
+    const pb = $("btnPreview");
+    pb.style.display = g.editing && S.preview ? "" : "none";
+    pb.classList.toggle("active", S.showPreview);
     const cb = $("btnColors");
     cb.style.display = g.editRegions ? "none" : "";
     cb.classList.toggle("active", g.editColors);
@@ -1759,7 +2444,7 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     if (confirm && !(await confirmDiscard())) return;
     let kind = squiggly ? (diagonals ? "Squiggly-X" : "Squiggly") : new C.Layout(null, diagonals, colors).kind;
     if (kind === "Sudoku") kind = "Rätsel";
-    S.generating = true; S.paused = false; S.regionMode = false;
+    S.generating = true; S.busyText = null; S.paused = false; S.regionMode = false;
     S.statusMsg = `Erzeuge ${kind} (${LEVELS[level]}) …`;
     if (S.game.editing) S.game.cancelEditing();
     layout(); render();
@@ -1805,6 +2490,7 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     };
     if (st !== "ok") { info("Rätsel prüfen", texts[st]); render(); return; }
     S.selected = null; S.showErrors = false; S.regionMode = false; S.unsure = new Set();
+    S.preview = null; S.showPreview = false;
     S.lastTick = performance.now();
     const kind = g.kind() === "Sudoku" ? "Rätsel" : g.kind();
     layout();
@@ -1815,6 +2501,7 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     if (!S.game.editing) return;
     S.game.cancelEditing();
     S.selected = null; S.regionMode = false; S.unsure = new Set();
+    S.preview = null; S.showPreview = false;
     layout();
     afterChange("Eingabe abgebrochen.");
   }
@@ -1886,6 +2573,145 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     }
   }
 
+  // ---------------------------------------------------------------- Bild-Import
+  // OpenCV.js (ca. 10 MB) und das Erkennungsmodell werden erst beim ersten Import geladen.
+  let visionLibs = null;
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const el = document.createElement("script");
+      el.src = src;
+      el.onload = resolve;
+      el.onerror = () => reject(new Error("Die Datei „" + src + "“ fehlt – sie wird für den Bild-Import benötigt."));
+      document.head.appendChild(el);
+    });
+  }
+  function ensureVision() {           // liefert { cv } (cv selbst ist "thenable" -> nicht direkt auflösen)
+    if (!visionLibs) {
+      visionLibs = (async () => {
+        const lib = window.SUDOKU_LIB || "";
+        if (!window.SUDOKU_DIGITS) await loadScript(lib + "digits_model.js");
+        if (!window.cv) await loadScript(lib + "opencv.js");
+        const c = window.cv;
+        if (!c.Mat) await new Promise((r) => { c.onRuntimeInitialized = r; });
+        return { cv: c };
+      })();
+      visionLibs.catch(() => { visionLibs = null; });
+    }
+    return visionLibs;
+  }
+
+  function decodeImage(blob) {        // -> ImageData (max. 2800 px; Ausrichtung laut EXIF übernimmt der Browser)
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob), img = new Image();
+      img.onload = () => {
+        const sc = Math.min(1, 2800 / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * sc)), h = Math.max(1, Math.round(img.naturalHeight * sc));
+        const cvs = document.createElement("canvas");
+        cvs.width = w; cvs.height = h;
+        const c2 = cvs.getContext("2d");
+        c2.fillStyle = "#fff"; c2.fillRect(0, 0, w, h);      // transparente PNGs auf Weiß
+        c2.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        resolve(c2.getImageData(0, 0, w, h));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Die Datei konnte nicht als Bild gelesen werden.")); };
+      img.src = url;
+    });
+  }
+
+  let fileInput = null;
+  function pickImage() {
+    if (!fileInput) {
+      fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";            // iPhone/iPad: Foto aufnehmen, Mediathek oder Datei
+      fileInput.style.display = "none";
+      fileInput.onchange = () => {
+        const f = fileInput.files && fileInput.files[0];
+        fileInput.value = "";
+        if (f) importImage(f);
+      };
+      document.body.appendChild(fileInput);
+    }
+    fileInput.click();
+  }
+
+  async function importImage(blob) {
+    if (S.generating) return;
+    if (!(await confirmDiscard())) return;
+    S.generating = true; S.busyText = "Erkenne Sudoku …"; S.paused = false; S.hover = null;
+    S.statusMsg = window.cv && window.cv.Mat ? "Erkenne Sudoku im Bild …" : "Lade die Bilderkennung (beim ersten Mal einige Sekunden) …";
+    render();
+    let rec;
+    try {
+      const [{ cv }, img] = await Promise.all([ensureVision(), decodeImage(blob)]);
+      S.statusMsg = "Erkenne Sudoku im Bild …"; renderStatus();
+      await new Promise((r) => setTimeout(r, 30));            // Anzeige aktualisieren lassen
+      rec = window.SudokuVision.recognize(cv, img, window.SUDOKU_DIGITS);
+    } catch (e) {
+      S.generating = false; S.busyText = null; S.statusMsg = "";
+      render();
+      info("Bild-Import", e.message || String(e));
+      return;
+    }
+    S.generating = false; S.busyText = null;
+    applyRecognition(rec);
+  }
+
+  function applyRecognition(rec) {
+    const g = S.game;
+    if (g.editing) g.cancelEditing();
+    g.startEditing(rec.grid, rec.squiggly ? rec.regions : null, rec.squiggly, rec.diagonal, rec.colors);
+    S.paused = false; S.noteMode = false; S.hintCell = null; S.showErrors = false;
+    S.unsure = new Set(rec.unsure);
+    S.selected = rec.unsure.length ? Math.min(...rec.unsure) : null;
+    const cvs = document.createElement("canvas");
+    cvs.width = rec.preview.width; cvs.height = rec.preview.height;
+    cvs.getContext("2d").putImageData(new ImageData(rec.preview.data, rec.preview.width, rec.preview.height), 0, 0);
+    S.preview = cvs; S.showPreview = false;
+    const n = rec.grid.filter(v => v).length, kind = g.kind();
+    const parts = [`Erkannt: ${kind === "Sudoku" ? "" : kind + ", "}${n} Vorgaben`];
+    if (S.unsure.size) parts.push(`${S.unsure.size} unsicher (orange)`);
+    const lay = g.activeLayout();
+    S.regionMode = false;
+    if (rec.squiggly && (!lay || !rec.regionsSure)) {
+      parts.push("Gebiete bitte prüfen („Gebiete malen“)");
+      if (!lay) { S.regionMode = true; S.paintRegion = 0; S.painted = true; }
+    }
+    if (lay) {
+      if (g.conflicts().size) parts.push("doppelte Zahlen (rot) – bitte korrigieren");
+      else if (n >= 17) {
+        const sols = C.countSolutions(rec.grid, 2, lay);
+        if (sols === 1) parts.push(`eindeutig lösbar, ${LEVELS[C.rateDetails(rec.grid, C.MAX_LEVEL, lay)[0]]}`);
+        else if (sols === 0) parts.push("so nicht lösbar – bitte prüfen");
+        else parts.push("mehrere Lösungen – fehlt eine Zahl?");
+      }
+    }
+    S.statusMsg = parts.join(", ") + ". Mit „Bild“ vergleichen, dann „Fertig“.";
+    layout(); render();
+  }
+
+  function photoHelp() {
+    info("Rätsel aus Foto oder Bild", `• Foto: Raster möglichst bildfüllend und gerade aufnehmen,
+  ohne Schatten und Spiegelungen. Leicht schräg ist kein Problem.
+• Screenshots und Bilder aus der Fotomediathek gehen genauso.
+• Am PC: Bild auch mit Strg+V einfügen oder ins Fenster ziehen.
+• Erkannt werden klassische Sudokus, Squiggly (Gebiete),
+  X-Sudoku (Diagonalen) und Farbsudoku (Farbgruppen).
+• Danach ist der Eingabemodus offen: unsichere Ziffern sind
+  orange markiert. Mit „Bild“ zwischen Foto und Raster
+  wechseln, Fehler korrigieren, dann „Fertig“.
+• Die Erkennung läuft ganz auf dem Gerät – das Bild wird nirgends
+  hochgeladen.`);
+  }
+
+  // Bilder ins Fenster ziehen
+  document.addEventListener("dragover", (e) => { if ([...e.dataTransfer.items].some(it => it.kind === "file")) e.preventDefault(); });
+  document.addEventListener("drop", (e) => {
+    const f = [...(e.dataTransfer.files || [])].find(x => x.type.startsWith("image/"));
+    if (f) { e.preventDefault(); importImage(f); }
+  });
+
   // ---------------------------------------------------------------- Analyse
   function analyze() {
     const g = S.game;
@@ -1956,6 +2782,8 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
       <div class="grid" id="mLevels">${[1, 2, 3, 4, 5].map(l => `<button data-l="${l}">${LEVELS[l]}</button>`).join("")}</div>
       <h3>Eigenes Rätsel eingeben</h3>
       <div class="tabs" id="mOwn">${VARIANTS.map(([n], k) => `<button data-k="${k}">${n}</button>`).join("")}</div>
+      <h3>Rätsel aus Foto oder Bild</h3>
+      <div class="grid2"><button id="mPhoto">Foto / Bild wählen …</button><button id="mPhotoHelp">Tipps</button></div>
       <h3>Rätsel-Code</h3>
       <div class="grid2"><button id="mPaste">Einfügen …</button><button id="mCopy">Kopieren</button></div>
       <h3>Rätsel</h3>
@@ -1993,6 +2821,8 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
           close(); const [, sq, dg, co] = VARIANTS[+b.dataset.k]; startEdit({ squiggly: sq, diagonals: dg, colors: co });
         });
         q("#mPaste").onclick = () => { close(); pasteDialog(); };
+        q("#mPhoto").onclick = () => { close(); pickImage(); };
+        q("#mPhotoHelp").onclick = () => { close(); photoHelp(); };
         q("#mCopy").onclick = () => { close(); copyCode(); };
         q("#mAnalyze").onclick = () => { close(); analyze(); };
         q("#mPrint").onclick = () => { close(); printPuzzle(); };
@@ -2274,7 +3104,10 @@ Der Spielstand wird automatisch auf diesem Gerät gespeichert.`);
   });
   document.addEventListener("paste", (e) => {
     if (overlay.classList.contains("on")) return;          // im Dialog normal einfügen
-    const text = (e.clipboardData || window.clipboardData).getData("text");
+    const cd = e.clipboardData || window.clipboardData;
+    const file = [...(cd.files || [])].find(f => f.type.startsWith("image/"));
+    if (file) { e.preventDefault(); importImage(file); return; }
+    const text = cd.getData("text");
     if (text) { e.preventDefault(); importCode(text); }
   });
 
@@ -2291,6 +3124,7 @@ Der Spielstand wird automatisch auf diesem Gerät gespeichert.`);
   $("btnRegions").onclick = toggleRegionMode;
   $("btnDiag").onclick = toggleDiagonals;
   $("btnColors").onclick = toggleColors;
+  $("btnPreview").onclick = () => { S.showPreview = !S.showPreview; render(); };
   $("status").onclick = () => { if (S.hintTech && S.statusMsg.startsWith("Tipp:")) techDialog(S.hintTech); };
   $("btnCancelEdit").onclick = cancelEdit;
 
@@ -2317,7 +3151,8 @@ Der Spielstand wird automatisch auf diesem Gerät gespeichert.`);
     newGame(2, false, false, false, false);
   }
   // Für Tests von außen erreichbar
-  window.SudokuUI = { S, render, layout, newGame, startEdit, finishEdit, importCode, analyze, hint, settings, techDialog };
+  window.SudokuUI = { S, render, layout, newGame, startEdit, finishEdit, importCode, analyze, hint, settings, techDialog,
+    importImage, ensureVision };
   start();
 })();
 
