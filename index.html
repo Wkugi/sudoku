@@ -2364,7 +2364,12 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
       if (top && top.some(([j, , nv]) => j === i && nv[0] === v)) g.undo();
       changed = g._commit(new Map([[i, [0, (1 << v) | (1 << d)]]]));
     } else if (v) changed = g.setValue(i, d);               // gleiche Zahl nochmals: Feld leeren
-    else if (g.notes[i]) changed = g.toggleNote(i, d);      // Notiz ergänzen oder verkleinern
+    else if (g.notes[i]) {                                  // Notiz ergänzen oder verkleinern
+      const left = g.notes[i] & ~(1 << d);
+      if ((g.notes[i] >> d & 1) && left && !(left & (left - 1))) {
+        changed = g.setValue(i, Math.log2(left));            // nur noch eine Ziffer übrig -> Zahl
+      } else changed = g.toggleNote(i, d);
+    }
     else changed = g.setValue(i, d);                          // leeres Feld: Zahl
     if (changed) { S.unsure.delete(i); afterChange(); }
   }
@@ -2946,8 +2951,8 @@ Feld antippen, dann Ziffer tippen. Zwei Arten (Menü → Ansicht):
   untere große Reihe = Zahl
 • Eine Reihe: Ziffer im leeren Feld = Zahl; eine weitere Ziffer
   macht daraus Notizen; in Notizen ergänzt bzw. entfernt jede
-  Ziffer die Notiz; Ziffer gedrückt halten (Balken läuft voll) =
-  Zahl eintragen
+  Ziffer die Notiz – bleibt nur eine übrig, wird sie zur Zahl;
+  Ziffer gedrückt halten (Balken läuft voll) = Zahl eintragen
 • Gleiche Zahl nochmals = Feld leeren, Radierer = löschen
 
 TASTATUR
