@@ -1015,7 +1015,9 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
       if (!this.canEdit(i)) return false;
       const nv = this.values[i] === d ? 0 : d;
       const changes = new Map([[i, [nv, 0]]]);
-      if (nv && !this.editing) {
+      // Notizen der Nachbarfelder: "always" entfernen, "never" stehen lassen, "correct" nur bei richtiger Zahl
+      const clean = this.noteCleanup || "always";
+      if (nv && !this.editing && clean !== "never" && (clean !== "correct" || (this.solution && nv === this.solution[i]))) {
         const bit = 1 << nv;
         for (const p of this.layout.peers[i]) if (this.notes[p] & bit) changes.set(p, [this.values[p], this.notes[p] & ~bit]);
       }
@@ -1944,7 +1946,7 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
   };
   // touchMode: "two" = Notiz-Reihe + Zahlen-Reihe, "one" = eine Reihe (Antippen/Gedrückthalten)
   const settings = Object.assign({ colored: true, diagStyle: "shade", input: "auto", lastVariant: 0,
-    touchMode: "two", holdMs: 1000 },
+    touchMode: "two", holdMs: 1000, noteCleanup: "always" },
     store.get(KEY_SET) || {});
   const saveSettings = () => store.set(KEY_SET, settings);
 
@@ -2361,8 +2363,10 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
       // Zahl + weitere Ziffer -> Notiz mit beiden. War die Zahl der letzte Schritt, wird er
       // zurückgenommen, damit die aus den Nachbarfeldern entfernten Notizen wiederkommen.
       const top = g._undo[g._undo.length - 1];
-      if (top && top.some(([j, , nv]) => j === i && nv[0] === v)) g.undo();
-      changed = g._commit(new Map([[i, [0, (1 << v) | (1 << d)]]]));
+      let undone = false;
+      if (top && top.some(([j, , nv]) => j === i && nv[0] === v)) undone = g.undo();
+      // nach dem Zurücknehmen kann die Notiz schon so dastehen -> trotzdem neu anzeigen
+      changed = g._commit(new Map([[i, [0, (1 << v) | (1 << d)]]])) || undone;
     } else if (v) changed = g.setValue(i, d);               // gleiche Zahl nochmals: Feld leeren
     else if (g.notes[i]) {                                  // Notiz ergänzen oder verkleinern
       const left = g.notes[i] & ~(1 << d);
@@ -2889,6 +2893,8 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
       <div class="seg" id="mDiag" style="grid-template-columns:repeat(2,1fr)"><button data-v="shade">hinterlegt</button><button data-v="lines">als Linien</button></div>
       <div style="font-size:13px;color:#666;margin:10px 0 4px">Bedienung</div>
       <div class="seg" id="mInput"><button data-v="auto">automatisch</button><button data-v="mouse">Maus</button><button data-v="touch">Finger</button></div>
+      <div style="font-size:13px;color:#666;margin:10px 0 4px">Zahl eintragen: diese Ziffer aus den Notizen der Nachbarfelder</div>
+      <div class="seg" id="mClean"><button data-v="always">entfernen</button><button data-v="never">nicht entfernen</button><button data-v="correct">nur wenn richtig</button></div>
       <div style="font-size:13px;color:#666;margin:10px 0 4px">Eingabe mit dem Finger</div>
       <div class="seg" id="mTouch" style="grid-template-columns:repeat(2,1fr)"><button data-v="two">Notiz- und Zahlenreihe</button><button data-v="one">eine Reihe</button></div>
       <div id="mHoldBox" style="font-size:13px;color:#666;margin:10px 0 4px">Gedrückt halten für Zahl (eine Reihe)</div>
@@ -2905,6 +2911,7 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
           d.querySelectorAll("#mInput button").forEach(b => b.classList.toggle("on", b.dataset.v === settings.input));
           d.querySelectorAll("#mTouch button").forEach(b => b.classList.toggle("on", b.dataset.v === settings.touchMode));
           d.querySelectorAll("#mHold button").forEach(b => b.classList.toggle("on", +b.dataset.v === settings.holdMs));
+          d.querySelectorAll("#mClean button").forEach(b => b.classList.toggle("on", b.dataset.v === settings.noteCleanup));
         };
         mark();
         d.querySelectorAll("#mTabs button").forEach(b => b.onclick = () => { tab = +b.dataset.k; settings.lastVariant = tab; saveSettings(); mark(); });
@@ -2931,6 +2938,9 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
           settings.touchMode = b.dataset.v; saveSettings(); mark(); layout(); render();
         });
         d.querySelectorAll("#mHold button").forEach(b => b.onclick = () => { settings.holdMs = +b.dataset.v; saveSettings(); mark(); });
+        d.querySelectorAll("#mClean button").forEach(b => b.onclick = () => {
+          settings.noteCleanup = b.dataset.v; S.game.noteCleanup = settings.noteCleanup; saveSettings(); mark();
+        });
         q("#mHelp").onclick = () => { close(); help(); };
         q("#mTech").onclick = () => { close(); techDialog(); };
         q("#mClose").onclick = close;
@@ -3236,11 +3246,12 @@ Der Spielstand wird automatisch auf diesem Gerät gespeichert.`);
 
   // ---------------------------------------------------------------- Start
   function start() {
+    S.game.noteCleanup = settings.noteCleanup;
     layout();
     const saved = store.get(KEY_SAVE);
     if (saved) {
       try {
-        const g = new C.Game(); g.fromDict(saved);
+        const g = new C.Game(); g.fromDict(saved); g.noteCleanup = settings.noteCleanup;
         S.game = g; S.statusMsg = "Letztes Spiel fortgesetzt.";
         layout(); render(); return;
       } catch (e) { /* defekt -> neues Spiel */ }
