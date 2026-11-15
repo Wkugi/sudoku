@@ -1096,12 +1096,38 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
       if (!this.editing || !this.editRegions || this.editRegions[i] === region) return false;
       this.editRegions[i] = region; return true;
     }
+    // Getrennte Flächen mit derselben Gebietsnummer (z. B. zwei Gebiete in derselben Farbe
+    // gemalt) werden eigene Gebiete: größte Fläche behält die Nummer, die übrigen bekommen freie.
+    splitRegions() {
+      const reg = this.editRegions;
+      if (!this.editing || !reg) return false;
+      const comp = new Array(81).fill(-1), comps = [];
+      for (let i = 0; i < 81; i++) {
+        if (comp[i] >= 0) continue;
+        const k = comps.length, cells = [i], stack = [i];
+        comp[i] = k;
+        while (stack.length) {
+          const c = stack.pop();
+          for (const n of neighbours(c)) if (comp[n] < 0 && reg[n] === reg[i]) { comp[n] = k; cells.push(n); stack.push(n); }
+        }
+        comps.push([reg[i], cells]);
+      }
+      if (comps.length > 9 || comps.length === new Set(reg).size) return false;
+      const keep = new Map();
+      comps.forEach(([g, cells], k) => { if (!keep.has(g) || cells.length > comps[keep.get(g)][1].length) keep.set(g, k); });
+      const free = range(9).filter(g => !keep.has(g));
+      comps.forEach(([g, cells], k) => {
+        if (keep.get(g) !== k) { const nw = free.shift(); for (const c of cells) reg[c] = nw; }
+      });
+      return true;
+    }
     regionSizes() { const reg = this.regionMap(); return range(9).map(r => reg.filter(g => g === r).length); }
     cancelEditing() { const b = this._editBackup; if (b) this.fromDict(b); else this._init(); }
     finishEditing() {
       const grid = Array.from(this.values);
       const n = grid.filter(v => v).length;
       let layout = new Layout(null, this.editDiagonals, this.editColors);
+      this.splitRegions();
       if (this.editRegions) {
         const problems = regionProblems(this.editRegions);
         if (problems.length) return ["regions", problems];
@@ -1623,6 +1649,36 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     return reg;
   }
 
+  function repair(vert, hor, thr) {
+    const bv = vert.map(row => row.map(x => x > thr)), bh = hor.map(row => row.map(x => x > thr));
+    const reg = components(bv, bh);
+    const sizes = new Map();
+    for (const g of reg) sizes.set(g, (sizes.get(g) || 0) + 1);
+    const sz = [...sizes.values()];
+    if (sz.every(n => n <= 9) || sz.some(n => n % 9)) return null;
+    const edges = [];
+    for (let r = 0; r < 9; r++) for (let c = 0; c < 8; c++) {
+      const i = r * 9 + c;
+      if (!bv[r][c] && reg[i] === reg[i + 1] && sizes.get(reg[i]) > 9) edges.push([vert[r][c], "v", r, c]);
+    }
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 9; c++) {
+      const i = r * 9 + c;
+      if (!bh[r][c] && reg[i] === reg[i + 9] && sizes.get(reg[i]) > 9) edges.push([hor[r][c], "h", r, c]);
+    }
+    // wie Python sorted(reverse=True): nach Stärke, dann Art, Zeile, Spalte absteigend
+    edges.sort((a, b) => b[0] - a[0] || (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0) || b[2] - a[2] || b[3] - a[3]);
+    const top = edges.slice(0, 40);
+    const attempt = (chosen) => {
+      const v2 = bv.map(r => r.slice()), h2 = bh.map(r => r.slice());
+      for (const [, kind, r, c] of chosen) (kind === "v" ? v2 : h2)[r][c] = true;
+      const nw = components(v2, h2);
+      return valid(nw) ? nw : null;
+    };
+    for (const e of top) { const nw = attempt([e]); if (nw) return nw; }
+    for (let k = 0; k < top.length; k++) for (const f of top.slice(k + 1)) { const nw = attempt([top[k], f]); if (nw) return nw; }
+    return null;
+  }
+
   function detectRegions(gray, lab) {
     const [vert, hor] = edgeInk(gray);
     const values = [...vert.flat(), ...hor.flat()];
@@ -1647,6 +1703,9 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
       }
     }
     if (classicOk) return [CLASSIC_REGIONS.slice(), true];
+    // Reparatur: zu große Gebiete mit den stärksten inneren Kanten teilen (wie in Python)
+    const rep = repair(vert, hor, thr);
+    if (rep) return [rep, false];
     if (lab) {
       const col = cellColors(lab);
       const dv = Array.from({ length: 9 }, (_, r) => Array.from({ length: 8 }, (_, c) => norm3(col[r * 9 + c], col[r * 9 + c + 1])));
@@ -2488,6 +2547,7 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
       none: "Dieses Rätsel hat keine Lösung.",
       multiple: "Dieses Rätsel hat mehrere Lösungen. Bitte weitere Vorgaben ergänzen.",
     };
+    if (st === "none") { explainNoSolution(); return; }
     if (st !== "ok") { info("Rätsel prüfen", texts[st]); render(); return; }
     S.selected = null; S.showErrors = false; S.regionMode = false; S.unsure = new Set();
     S.preview = null; S.showPreview = false;
@@ -2495,6 +2555,35 @@ window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr
     const kind = g.kind() === "Sudoku" ? "Rätsel" : g.kind();
     layout();
     afterChange(`${kind} übernommen: ${n} Vorgaben, Schwierigkeit ${LEVELS[g.level]}.`);
+  }
+
+  // Keine Lösung: welche einzelne Vorgabe ist vermutlich falsch (z. B. falsch erkannt)?
+  // Felder, nach deren Entfernen das Rätsel lösbar wird, werden orange markiert.
+  function explainNoSolution() {
+    const g = S.game, lay = g.activeLayout(), grid = g.values.slice();
+    const suspects = [];
+    if (lay) {
+      for (let i = 0; i < 81; i++) {
+        if (!grid[i]) continue;
+        const v = grid[i];
+        grid[i] = 0;
+        if (C.countSolutions(grid, 1, lay) > 0) suspects.push(i);
+        grid[i] = v;
+      }
+    }
+    const regionHint = g.editRegions ? "\n\nBei Squiggly können auch die Gebiete falsch sein – „Gebiete malen“ zeigt sie." : "";
+    const cmp = S.preview ? " Mit „Bild“ kannst du mit dem Foto vergleichen." : "";
+    if (suspects.length && suspects.length <= 12) {
+      S.unsure = new Set(suspects);
+      S.selected = suspects[0];
+      S.statusMsg = `Keine Lösung – bitte die orange markierten Felder prüfen.${cmp}`;
+      render();
+      info("Rätsel prüfen", `Dieses Rätsel hat keine Lösung.\n\nVermutlich ist eine dieser Zahlen falsch (orange markiert):\n` +
+        suspects.map(i => `${C.cellName(i)}: ${grid[i]}`).join(", ") + "\n" + cmp.trim() + regionHint);
+    } else {
+      render();
+      info("Rätsel prüfen", "Dieses Rätsel hat keine Lösung." + (cmp ? "\n\n" + cmp.trim() : "") + regionHint);
+    }
   }
 
   function cancelEdit() {
@@ -3073,7 +3162,10 @@ Der Spielstand wird automatisch auf diesem Gerät gespeichert.`);
     if (h && hoverOk(h[0])) nh = [h[0], S.game.values[h[0]] ? null : h[1]];
     if (JSON.stringify(nh) !== JSON.stringify(S.hover)) { S.hover = nh; drawBoard(); }
   });
-  canvas.addEventListener("pointerup", () => { S.painting = false; });
+  canvas.addEventListener("pointerup", () => {
+    if (S.painting && S.game.splitRegions()) { regionStatus(); render(); }   // getrennte Flächen gleicher Farbe trennen
+    S.painting = false;
+  });
   canvas.addEventListener("pointercancel", () => { S.painting = false; });
   canvas.addEventListener("pointerleave", () => { if (S.hover) { S.hover = null; drawBoard(); } });
   canvas.addEventListener("contextmenu", (e) => e.preventDefault());
