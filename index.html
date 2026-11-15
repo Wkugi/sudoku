@@ -78,7 +78,25 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
 .menu h3:first-child { margin-top: 0; }
 .menu .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .menu .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-.menu .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 6px; }
+.menu .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 6px; }
+.menu .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+/* Lösungstechniken */
+.dlg.wide { max-width: 720px; }
+.tech .list button { display: block; width: 100%; text-align: left; border: none; background: none; padding: 7px 10px;
+  border-radius: 8px; font-size: 15px; }
+.tech .list button:hover { background: #f2f4f7; }
+.tech .list h3 { margin: 12px 0 2px; font-size: 13px; text-transform: none; letter-spacing: 0; }
+.tech .head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.tech .head button { padding: 6px 10px; font-size: 14px; }
+.tech h2 { color: #1f3a5f; margin: 4px 0 2px; }
+.tech .lvl { font-size: 13px; font-weight: 600; }
+.tech .eng { font-size: 12px; color: #888; margin-left: 10px; font-weight: 400; }
+.tech h4 { color: #1f3a5f; margin: 14px 0 4px; font-size: 14px; }
+.tech p, .tech li { font-size: 14px; line-height: 1.5; margin: 4px 0; }
+.tech ol, .tech ul { padding-left: 22px; margin: 4px 0; }
+.tech svg.board { display: block; max-width: 100%; height: auto; margin: 8px 0; }
+.tech .nav { display: flex; justify-content: space-between; margin-top: 14px; gap: 8px; }
+#status.link { cursor: pointer; color: #1f5fa8; }
 .menu .tabs button { font-size: 13px; padding: 7px 2px; }
 .menu .tabs button.on { background: var(--bar); color: var(--accent); border-color: var(--bar); }
 .menu .grid button { font-size: 13px; padding: 9px 2px; }
@@ -113,7 +131,8 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
   <div id="status"></div>
   <div id="editbar">
     <button id="btnRegions">Gebiete malen</button>
-    <button id="btnDiag">Diagonalen: aus</button>
+    <button id="btnDiag">Diagonalen</button>
+    <button id="btnColors">Farben</button>
     <button id="btnCancelEdit">Abbrechen</button>
   </div>
   <div id="barMouse" class="bar"></div>
@@ -132,6 +151,9 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
 </div>
 <div id="overlay"></div>
 <div id="print"></div>
+<script>
+window.SUDOKU_TECH = {"levels":{"1":"Leicht","2":"Mittel","3":"Schwer","4":"Sehr schwer","5":"Extrem"},"basics":["<b>Zeile<\/b> (waagrecht), <b>Spalte<\/b> (senkrecht), <b>Block<\/b> (3×3-Kasten). Im Bild hinterlegt: Zeile 2, Spalte 7 und Block 7.","<b>Einheit<\/b>: Oberbegriff für Zeile, Spalte oder Block. Jede Einheit enthält jede Ziffer 1–9 genau einmal.","<b>Feldangabe<\/b>: Z5S5 = Zeile 5, Spalte 5 (gelb). Blöcke sind von links oben nach rechts unten von 1 bis 9 nummeriert.","<b>Kandidat<\/b>: eine Ziffer, die in einem leeren Feld nach den bisherigen Einträgen noch möglich ist. Kandidaten werden als kleine Notizen eingetragen (im Programm: Zauberhut → „Kandidaten automatisch eintragen“).","<b>Sich sehen<\/b>: Zwei Felder „sehen sich“, wenn sie in derselben Einheit liegen. Felder, die sich sehen, können nicht dieselbe Ziffer haben.","<b>Starke Verbindung<\/b> (für eine Ziffer d): In einer Einheit gibt es genau zwei Plätze für d. Ist der eine Platz <i>nicht<\/i> d, <i>muss<\/i> der andere d sein. In den Bildern: durchgezogene Linie.","<b>Schwache Verbindung<\/b>: Zwei Felder sehen sich und haben beide d als Kandidaten. Ist der eine d, kann der andere <i>nicht<\/i> d sein. In den Bildern: gestrichelte Linie.","<b>Squiggly-Sudoku<\/b>: Statt der 3×3-Blöcke gibt es neun unregelmäßige <b>Gebiete<\/b> aus je 9 Feldern (dicke Linien). Alle Techniken dieses Dokuments gelten dort genauso – überall, wo „Block“ steht, ist dann das Gebiet gemeint. Dazu kommt das „Gesetz der Überbleibsel“ (Stufe Mittel).","<b>X-Sudoku<\/b> (auch als Squiggly-X): Zusätzlich müssen beide Hauptdiagonalen 1–9 genau einmal enthalten. Die Diagonalen sind einfach zwei weitere Einheiten – alle Techniken gelten mit ihnen. Das Mittelfeld Z5S5 liegt auf beiden Diagonalen und sieht dadurch besonders viele Felder.","<b>Farbsudoku<\/b> (auch als Farbsudoku-X): Die Felder an derselben Stelle ihres Blocks haben dieselbe Farbe – z. B. sind alle Felder links oben in den Blöcken rot. Jede der neun <b>Farbgruppen<\/b> muss 1–9 genau einmal enthalten. Auch die Farbgruppen sind einfach weitere Einheiten, für die alle Techniken gelten.","<b>Ausschluss (Elimination)<\/b>: Fast alle fortgeschrittenen Techniken setzen keine Ziffer direkt, sondern streichen Kandidaten. Danach entstehen meist neue Einzelne."],"basics_board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z5S5":7},"cands":{},"fills":{"Z5S5":"#fff3c4"},"shade":["Z2S1","Z2S2","Z2S3","Z2S4","Z2S5","Z2S6","Z2S7","Z2S8","Z2S9","Z1S7","Z2S7","Z3S7","Z4S7","Z5S7","Z6S7","Z7S7","Z8S7","Z9S7","Z7S1","Z7S2","Z7S3","Z8S1","Z8S2","Z8S3","Z9S1","Z9S2","Z9S3"],"mark":{},"links":[]},"approach":["Zuerst nur mit Einzelnen arbeiten, solange es geht – ohne Notizen, das geht schnell.","Wenn nichts mehr geht: Kandidaten vollständig eintragen und nach jeder gesetzten Ziffer aktuell halten (das Programm streicht Notizen in Zeile, Spalte und Block automatisch).","Techniken immer in der Reihenfolge dieses Dokuments suchen: erst die einfachen. Nach jedem Ausschluss wieder nach Einzelnen schauen.","Erst wenn alle Techniken einer Stufe nichts mehr bringen, zur nächsten Stufe gehen."],"techniques":[{"name":"Nackter Einzelner","english":"Naked Single","level":1,"idea":"In einem Feld ist nur noch eine einzige Ziffer möglich, weil alle anderen acht Ziffern bereits in seiner Zeile, Spalte oder seinem Block stehen.","how":["Ein leeres Feld wählen.","Alle Ziffern sammeln, die in seiner Zeile, Spalte und seinem Block schon stehen.","Fehlt genau eine Ziffer, gehört sie in dieses Feld."],"example":["Für Z5S5: Zeile 5 enthält 1, 2, 3 – Spalte 5 enthält 4, 5, 6 – Block 5 enthält 7 und 9.","Es fehlt nur die <b>8<\/b>, also ist Z5S5 = 8."],"tip":"Bei eingetragenen Kandidaten erkennst du nackte Einzelne sofort: Felder mit nur einer Notiz.","board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z5S1":1,"Z5S2":2,"Z5S9":3,"Z1S5":4,"Z2S5":5,"Z9S5":6,"Z4S4":7,"Z6S6":9},"cands":{"Z5S5":"8"},"fills":{"Z5S5":"#cdeccf"},"shade":["Z5S1","Z5S2","Z5S3","Z5S4","Z5S5","Z5S6","Z5S7","Z5S8","Z5S9","Z1S5","Z2S5","Z3S5","Z4S5","Z5S5","Z6S5","Z7S5","Z8S5","Z9S5","Z4S4","Z4S5","Z4S6","Z5S4","Z5S5","Z5S6","Z6S4","Z6S5","Z6S6"],"mark":{"Z5S5":{"8":"g"}},"links":[]}},{"name":"Versteckter Einzelner","english":"Hidden Single","level":1,"idea":"Eine Ziffer hat in einer Einheit nur noch einen möglichen Platz – auch wenn in diesem Feld sonst noch andere Kandidaten stehen.","how":["Eine Einheit (meist einen Block) und eine Ziffer wählen, die dort noch fehlt.","Für jedes leere Feld der Einheit prüfen, ob die Ziffer in seiner Zeile oder Spalte bereits vorkommt („Strahlen“ der vorhandenen Ziffern verfolgen).","Bleibt nur ein Feld übrig, gehört die Ziffer dorthin."],"example":["Wo kann die <b>7<\/b> in Block 1 stehen? Die 7 in Z2S5 und Z3S8 sperrt die Zeilen 2 und 3, die 7 in Z5S2 und Z8S3 sperrt die Spalten 2 und 3.","Rot: gesperrte oder belegte Felder. Übrig bleibt nur <b>Z1S1 = 7<\/b>."],"tip":"Gehe die Ziffern 1–9 der Reihe nach durch und prüfe jeden Block – das ist die schnellste Methode für den Anfang.","board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z2S5":7,"Z3S8":7,"Z5S2":7,"Z8S3":7,"Z2S2":3,"Z1S3":5},"cands":{"Z1S1":"7"},"fills":{"Z1S1":"#cdeccf","Z1S2":"#fde3e1","Z2S1":"#fde3e1","Z2S3":"#fde3e1","Z3S1":"#fde3e1","Z3S2":"#fde3e1","Z3S3":"#fde3e1"},"shade":["Z2S4","Z2S5","Z2S6","Z2S7","Z2S8","Z2S9","Z3S4","Z3S5","Z3S6","Z3S7","Z3S8","Z3S9","Z4S2","Z5S2","Z6S2","Z7S2","Z8S2","Z9S2","Z4S3","Z5S3","Z6S3","Z7S3","Z8S3","Z9S3"],"mark":{"Z1S1":{"7":"g"}},"links":[]}},{"name":"Block-Linien-Interaktion","english":"Locked Candidates (Pointing / Claiming)","level":2,"idea":"Liegen alle Kandidaten einer Ziffer innerhalb eines Blocks in derselben Zeile (oder Spalte), muss die Ziffer in diesem Block genau dort stehen – also nicht im Rest dieser Zeile. Umgekehrt: Liegen alle Kandidaten einer Ziffer in einer Zeile innerhalb eines Blocks, kann die Ziffer im übrigen Block nicht stehen.","how":["Block wählen und für eine Ziffer alle Kandidaten darin ansehen.","Liegen sie alle in einer Zeile/Spalte („Pointing“): Ziffer in dieser Zeile/Spalte außerhalb des Blocks streichen.","Umgekehrt für eine Zeile/Spalte: Liegen alle Kandidaten in einem Block („Claiming“): Ziffer im restlichen Block streichen."],"example":["In Block 1 kann die <b>4<\/b> nur in Z2S1 oder Z2S3 stehen – beide in Zeile 2.","Damit steht die 4 von Zeile 2 sicher in Block 1: In Z2S5, Z2S8 und Z2S9 wird die 4 gestrichen."],"tip":"Bei Squiggly besonders ergiebig: Gebiete reichen über mehrere Zeilen und Spalten und überschneiden sich deshalb mit vielen von ihnen. Beim X-Sudoku gilt die Technik auch zwischen einer Diagonale und einem Block, einer Zeile oder Spalte: Liegen z. B. alle Kandidaten einer Ziffer im Block 1 auf der Diagonale, wird sie im Rest der Diagonale gestrichen. Beim Farbsudoku entsprechend zwischen einer Farbgruppe und einer Zeile oder Spalte.","board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z1S1":1,"Z1S2":2,"Z1S3":3,"Z3S1":5,"Z3S2":7,"Z3S3":8,"Z2S2":9},"cands":{"Z2S1":"46","Z2S3":"46","Z2S5":"45","Z2S8":"14","Z2S9":"48"},"fills":{},"shade":["Z2S1","Z2S2","Z2S3","Z2S4","Z2S5","Z2S6","Z2S7","Z2S8","Z2S9"],"mark":{"Z2S1":{"4":"g"},"Z2S3":{"4":"g"},"Z2S5":{"4":"x"},"Z2S8":{"4":"x"},"Z2S9":{"4":"x"}},"links":[]}},{"name":"Nacktes Paar","english":"Naked Pair","level":2,"idea":"Zwei Felder einer Einheit haben genau dieselben zwei Kandidaten. Diese beiden Ziffern müssen sich auf diese zwei Felder verteilen – in den übrigen Feldern der Einheit sind sie unmöglich.","how":["Felder mit genau zwei Kandidaten suchen.","Gibt es in derselben Einheit ein zweites Feld mit denselben beiden Kandidaten, liegt ein Paar vor.","Beide Ziffern in allen anderen Feldern dieser Einheit streichen."],"example":["In Zeile 1 haben Z1S2 und Z1S6 nur die Kandidaten <b>3 und 7<\/b>.","Eines der beiden Felder ist 3, das andere 7. Daher: 3 und 7 in Z1S4, Z1S8 und Z1S9 streichen."],"tip":"Liegen die beiden Felder zusätzlich im selben Block, gilt der Ausschluss auch für den Block.","board":{"rows":[0,1,2],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z1S1":4,"Z1S3":6,"Z1S5":2,"Z1S7":8},"cands":{"Z1S2":"37","Z1S6":"37","Z1S4":"135","Z1S8":"579","Z1S9":"357"},"fills":{},"shade":[],"mark":{"Z1S2":{"3":"g","7":"g"},"Z1S6":{"3":"g","7":"g"},"Z1S4":{"3":"x"},"Z1S8":{"7":"x"},"Z1S9":{"3":"x","7":"x"}},"links":[]}},{"name":"Verstecktes Paar","english":"Hidden Pair","level":2,"idea":"Zwei Ziffern kommen in einer Einheit nur noch in denselben zwei Feldern vor. Dann gehören diese beiden Felder diesen zwei Ziffern – alle anderen Kandidaten in diesen Feldern können gestrichen werden.","how":["Für eine Einheit zählen, in wie vielen Feldern jede fehlende Ziffer möglich ist.","Zwei Ziffern mit je genau zwei Plätzen suchen, die in denselben Feldern liegen.","In diesen beiden Feldern alle übrigen Kandidaten streichen. Es entsteht ein nacktes Paar."],"example":["In Spalte 5 kommen <b>2 und 6<\/b> nur in Z3S5 und Z7S5 vor.","Also sind diese zwei Felder 2 und 6: Die 1 und 9 in Z3S5 sowie die 4 und 9 in Z7S5 werden gestrichen."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[3,4,5,6],"givens":{"Z2S5":3,"Z4S5":5,"Z6S5":7,"Z8S5":8},"cands":{"Z3S5":"1269","Z7S5":"2469","Z1S5":"19","Z5S5":"49","Z9S5":"14"},"fills":{},"shade":["Z1S5","Z2S5","Z3S5","Z4S5","Z5S5","Z6S5","Z7S5","Z8S5","Z9S5"],"mark":{"Z3S5":{"2":"g","6":"g","1":"x","9":"x"},"Z7S5":{"2":"g","6":"g","4":"x","9":"x"}},"links":[]}},{"name":"Gesetz der Überbleibsel","english":"Law of Leftovers (nur Squiggly)","level":2,"idea":"Drei benachbarte Zeilen enthalten jede Ziffer genau dreimal – drei ganze Gebiete ebenfalls. Legt man die drei Gebiete, die am stärksten in diesen Zeilen liegen, über die Zeilen, bleiben auf beiden Seiten ein paar Felder übrig: Felder der Zeilen, die zu keinem der Gebiete gehören, und Felder der Gebiete außerhalb der Zeilen. Beide Gruppen enthalten <b>genau dieselben Ziffern<\/b>. Das gilt ebenso für 1, 2, 4 … benachbarte Zeilen oder Spalten mit gleich vielen Gebieten.","how":["k benachbarte Zeilen (oder Spalten) wählen, am besten am Rand: die oberste Zeile, die obersten zwei, drei …","Die k Gebiete suchen, die diese Zeilen fast vollständig ausfüllen.","Überbleibsel markieren: Felder der Zeilen, die in keinem dieser Gebiete liegen – und Felder dieser Gebiete außerhalb der Zeilen. Beide Gruppen sind gleich groß.","Beide Gruppen enthalten dieselben Ziffern: Eine Ziffer, die auf der einen Seite nirgends möglich ist, wird auf der anderen gestrichen. Bei je einem Feld sind beide Felder sogar gleich."],"example":["Zeilen 1–3 und die Gebiete 1, 2, 3 (grün, blau, gelb). Gebiet 1 ragt mit <b>Z4S1<\/b> nach unten heraus, dafür gehört <b>Z3S5<\/b> zu Gebiet 5. Diese beiden Felder (orange) sind die Überbleibsel.","Also haben Z3S5 und Z4S1 <b>dieselbe Ziffer<\/b>. Z4S1 kann nur 4 oder 7 sein – deshalb werden 2 und 9 in Z3S5 gestrichen.","Mit nur einem Feld auf jeder Seite ist das die stärkste Form: Sobald eines der beiden Felder gelöst ist, steht auch das andere fest."],"tip":"Am ergiebigsten sind die Ränder des Rasters. Das Programm prüft 1 bis 4 benachbarte Zeilen und Spalten an jeder Stelle.","board":{"rows":[0,1,2,3,4,5],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z1S1":5,"Z2S8":1,"Z1S6":3},"cands":{"Z3S5":"2479","Z4S1":"47"},"fills":{"Z1S1":"#dcefd0","Z1S2":"#dcefd0","Z1S3":"#dcefd0","Z1S4":"#d9e8fb","Z1S5":"#d9e8fb","Z1S6":"#d9e8fb","Z1S7":"#fff0bf","Z1S8":"#fff0bf","Z1S9":"#fff0bf","Z2S1":"#dcefd0","Z2S2":"#dcefd0","Z2S3":"#dcefd0","Z2S4":"#d9e8fb","Z2S5":"#d9e8fb","Z2S6":"#d9e8fb","Z2S7":"#fff0bf","Z2S8":"#fff0bf","Z2S9":"#fff0bf","Z3S1":"#dcefd0","Z3S2":"#dcefd0","Z3S3":"#d9e8fb","Z3S4":"#d9e8fb","Z3S6":"#d9e8fb","Z3S7":"#fff0bf","Z3S8":"#fff0bf","Z3S9":"#fff0bf","Z4S1":"#ffd27a","Z3S5":"#ffd27a"},"shade":[],"mark":{"Z3S5":{"4":"g","7":"g","2":"x","9":"x"},"Z4S1":{"4":"g","7":"g"}},"links":[],"regions":[0,0,0,1,1,1,2,2,2,0,0,0,1,1,1,2,2,2,0,0,1,1,4,1,2,2,2,0,3,3,3,4,4,5,5,5,3,3,3,4,4,4,5,5,5,3,3,3,4,4,4,5,5,5,6,6,6,7,7,7,8,8,8,6,6,6,7,7,7,8,8,8,6,6,6,7,7,7,8,8,8]}},{"name":"Nacktes Tripel","english":"Naked Triple","level":3,"idea":"Wie das nackte Paar, nur mit drei Feldern: Drei Felder einer Einheit enthalten zusammen nur drei verschiedene Ziffern. Nicht jedes Feld muss alle drei enthalten.","how":["In einer Einheit drei Felder suchen, deren Kandidaten zusammen nur drei Ziffern ergeben (z. B. {1,5}, {5,9}, {1,9}).","Diese drei Ziffern in allen anderen Feldern der Einheit streichen."],"example":["Block 5 (Ausschnitt): Z4S4 {1,5}, Z5S6 {5,9}, Z6S5 {1,9} enthalten zusammen nur <b>1, 5, 9<\/b>.","Diese drei Felder belegen 1, 5 und 9. Daher: 1 und 9 in Z4S6 streichen, 5 in Z6S4 streichen."],"tip":null,"board":{"rows":[3,4,5],"cols":[3,4,5],"givens":{"Z4S5":4,"Z5S5":7},"cands":{"Z4S4":"15","Z5S6":"59","Z6S5":"19","Z4S6":"139","Z6S4":"358","Z5S4":"26"},"fills":{},"shade":["Z4S4","Z4S5","Z4S6","Z5S4","Z5S5","Z5S6","Z6S4","Z6S5","Z6S6"],"mark":{"Z4S4":{"1":"g","5":"g"},"Z5S6":{"5":"g","9":"g"},"Z6S5":{"1":"g","9":"g"},"Z4S6":{"1":"x","9":"x"},"Z6S4":{"5":"x"}},"links":[]}},{"name":"Verstecktes Tripel","english":"Hidden Triple","level":3,"idea":"Drei Ziffern kommen in einer Einheit nur in denselben drei Feldern vor. Diese Felder gehören den drei Ziffern; alle anderen Kandidaten darin werden gestrichen.","how":["Für eine Einheit drei Ziffern suchen, deren Plätze zusammen nur drei Felder ergeben.","In diesen drei Feldern alle Kandidaten außer den drei Ziffern streichen."],"example":["In Zeile 9 stehen <b>2, 4 und 8<\/b> nur in Z9S1, Z9S5 und Z9S7.","Gestrichen werden: 6 in Z9S1, 1 und 9 in Z9S5, 3 in Z9S7."],"tip":"Versteckte Tripel sind schwer zu sehen. Hilfreich ist es, für jede Ziffer die Anzahl der Plätze in der Einheit zu zählen.","board":{"rows":[6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z9S2":5,"Z9S4":7},"cands":{"Z9S1":"246","Z9S5":"1489","Z9S7":"238","Z9S3":"169","Z9S9":"369","Z9S6":"139","Z9S8":"36"},"fills":{},"shade":[],"mark":{"Z9S1":{"2":"g","4":"g","6":"x"},"Z9S5":{"4":"g","8":"g","1":"x","9":"x"},"Z9S7":{"2":"g","8":"g","3":"x"}},"links":[]}},{"name":"X-Wing","english":"X-Wing","level":3,"idea":"Eine Ziffer hat in zwei Zeilen jeweils genau zwei mögliche Plätze, und diese liegen in denselben zwei Spalten (ein Rechteck). Dann steht die Ziffer in diesen beiden Spalten sicher in den beiden Zeilen – egal welche Ecken es sind. In den beiden Spalten kann die Ziffer sonst nirgends stehen.","how":["Eine Ziffer wählen und Zeilen suchen, in denen sie genau zweimal als Kandidat vorkommt.","Zwei solche Zeilen finden, deren Kandidaten in denselben zwei Spalten liegen.","Die Ziffer in diesen zwei Spalten in allen anderen Zeilen streichen.","Dasselbe funktioniert mit vertauschten Rollen (zwei Spalten → Zeilen streichen)."],"example":["Die <b>5<\/b> hat in Zeile 2 und Zeile 7 jeweils nur die Plätze in Spalte 3 und 8.","Entweder Z2S3 + Z7S8 oder Z2S8 + Z7S3 sind 5 – in beiden Fällen sind die Spalten 3 und 8 „versorgt“. Die 5 wird in Z1S3, Z4S3, Z5S8 und Z9S8 gestrichen."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z2S3":"5","Z2S8":"5","Z7S3":"5","Z7S8":"5","Z4S3":"56","Z5S8":"25","Z9S8":"57","Z1S3":"15"},"fills":{},"shade":["Z2S1","Z2S2","Z2S3","Z2S4","Z2S5","Z2S6","Z2S7","Z2S8","Z2S9","Z7S1","Z7S2","Z7S3","Z7S4","Z7S5","Z7S6","Z7S7","Z7S8","Z7S9"],"mark":{"Z2S3":{"5":"g"},"Z2S8":{"5":"g"},"Z7S3":{"5":"g"},"Z7S8":{"5":"g"},"Z4S3":{"5":"x"},"Z5S8":{"5":"x"},"Z9S8":{"5":"x"},"Z1S3":{"5":"x"}},"links":[["Z2S3","Z2S8","s"],["Z7S3","Z7S8","s"],["Z2S3","Z7S3","w"],["Z2S8","Z7S8","w"]]}},{"name":"Swordfish","english":"Swordfish","level":3,"idea":"Die Erweiterung des X-Wings auf drei Zeilen und drei Spalten: Eine Ziffer kommt in drei Zeilen nur in insgesamt drei Spalten vor (je Zeile zwei oder drei Plätze). Dann belegen diese drei Zeilen die Ziffer in den drei Spalten.","how":["Für eine Ziffer Zeilen mit nur zwei oder drei Kandidaten suchen.","Drei solche Zeilen finden, deren Kandidaten zusammen in genau drei Spalten liegen.","Die Ziffer in diesen drei Spalten in allen übrigen Zeilen streichen."],"example":["Die <b>3<\/b>: Zeile 1 → Spalten 2, 7; Zeile 5 → Spalten 2, 5; Zeile 8 → Spalten 5, 7.","Drei Zeilen, zusammen genau drei Spalten (2, 5, 7). Die 3 wird in diesen Spalten sonst gestrichen: Z3S2, Z6S5, Z9S7."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z1S2":"3","Z1S7":"3","Z5S2":"3","Z5S5":"3","Z8S5":"3","Z8S7":"3","Z3S2":"23","Z6S5":"38","Z9S7":"36"},"fills":{},"shade":["Z1S1","Z1S2","Z1S3","Z1S4","Z1S5","Z1S6","Z1S7","Z1S8","Z1S9","Z5S1","Z5S2","Z5S3","Z5S4","Z5S5","Z5S6","Z5S7","Z5S8","Z5S9","Z8S1","Z8S2","Z8S3","Z8S4","Z8S5","Z8S6","Z8S7","Z8S8","Z8S9"],"mark":{"Z1S2":{"3":"g"},"Z1S7":{"3":"g"},"Z5S2":{"3":"g"},"Z5S5":{"3":"g"},"Z8S5":{"3":"g"},"Z8S7":{"3":"g"},"Z3S2":{"3":"x"},"Z6S5":{"3":"x"},"Z9S7":{"3":"x"}},"links":[]}},{"name":"XY-Wing","english":"XY-Wing (Y-Wing)","level":3,"idea":"Drei Felder mit je zwei Kandidaten: ein „Drehpunkt“ {X,Y} und zwei „Flügel“ {X,Z} und {Y,Z}, die den Drehpunkt sehen (sich gegenseitig aber nicht sehen müssen). Egal welche Ziffer der Drehpunkt hat – einer der beiden Flügel wird Z. Felder, die beide Flügel sehen, können daher nicht Z sein.","how":["Ein Feld mit zwei Kandidaten {X,Y} als Drehpunkt wählen.","Zwei Felder mit zwei Kandidaten suchen, die den Drehpunkt sehen: eines mit {X,Z}, eines mit {Y,Z} (gleiches Z).","Z in allen Feldern streichen, die beide Flügel sehen."],"example":["Drehpunkt Z5S5 {4,7}, Flügel Z5S1 {4,9} und Z2S5 {7,9}; Z = <b>9<\/b>.","Ist Z5S5 = 4, wird Z5S1 = 9. Ist Z5S5 = 7, wird Z2S5 = 9. Eine 9 steht also sicher in einem der Flügel.","Z2S1 sieht beide Flügel (Spalte 1 bzw. Zeile 2) → 9 streichen."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z5S5":"47","Z5S1":"49","Z2S5":"79","Z2S1":"29"},"fills":{"Z5S5":"#cfe0f7","Z5S1":"#cdeccf","Z2S5":"#cdeccf"},"shade":[],"mark":{"Z5S5":{"4":"b","7":"b"},"Z5S1":{"9":"g"},"Z2S5":{"9":"g"},"Z2S1":{"9":"x"}},"links":[["Z5S5","Z5S1","w"],["Z5S5","Z2S5","w"]]}},{"name":"XYZ-Wing","english":"XYZ-Wing","level":3,"idea":"Wie der XY-Wing, aber der Drehpunkt hat drei Kandidaten {X,Y,Z}. Dann kann auch der Drehpunkt selbst Z sein. Gestrichen werden darf Z daher nur in Feldern, die alle drei Felder sehen.","how":["Drehpunkt mit drei Kandidaten {X,Y,Z} wählen.","Zwei Flügel {X,Z} und {Y,Z} suchen, die den Drehpunkt sehen.","Z in Feldern streichen, die Drehpunkt und beide Flügel sehen. Das ist meist nur in einem Block möglich."],"example":["Drehpunkt Z2S2 {1,2,6}, Flügel Z2S7 {1,6} (gleiche Zeile) und Z3S1 {2,6} (gleicher Block); Z = <b>6<\/b>.","Eines der drei Felder ist sicher 6. Z2S1 und Z2S3 sehen alle drei (Zeile 2 und Block 1) → 6 dort streichen."],"tip":null,"board":{"rows":[0,1,2,3],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z2S2":"126","Z2S7":"16","Z3S1":"26","Z2S1":"68","Z2S3":"36"},"fills":{"Z2S2":"#cfe0f7","Z2S7":"#cdeccf","Z3S1":"#cdeccf"},"shade":[],"mark":{"Z2S2":{"6":"b"},"Z2S7":{"6":"g"},"Z3S1":{"6":"g"},"Z2S1":{"6":"x"},"Z2S3":{"6":"x"}},"links":[["Z2S2","Z2S7","w"],["Z2S2","Z3S1","w"]]}},{"name":"Nacktes und verstecktes Quadrupel","english":"Naked / Hidden Quad","level":4,"idea":"Die Fortsetzung von Paar und Tripel auf vier Felder: <b>Nackt<\/b> – vier Felder einer Einheit enthalten zusammen nur vier Ziffern → diese Ziffern im Rest der Einheit streichen. <b>Versteckt<\/b> – vier Ziffern kommen nur in denselben vier Feldern vor → in diesen Feldern alle anderen Kandidaten streichen.","how":["Vorgehen wie bei Paar und Tripel, nur mit vier Feldern bzw. vier Ziffern.","Hinweis: Ein nacktes Quadrupel ist immer auch ein verstecktes Tripel/Paar „von der anderen Seite“ – oft ist das kleinere Muster leichter zu finden."],"example":["Zeile 4: Z4S1, Z4S3, Z4S6, Z4S8 enthalten zusammen nur <b>1, 2, 5, 8<\/b>.","Gestrichen werden die 1 in Z4S2 und die 2 in Z4S9."],"tip":null,"board":{"rows":[3,4,5],"cols":[0,1,2,3,4,5,6,7,8],"givens":{"Z4S4":4,"Z4S5":7,"Z4S7":3},"cands":{"Z4S1":"12","Z4S3":"25","Z4S6":"158","Z4S8":"28","Z4S2":"169","Z4S9":"269"},"fills":{},"shade":[],"mark":{"Z4S1":{"1":"g","2":"g"},"Z4S3":{"2":"g","5":"g"},"Z4S6":{"1":"g","5":"g","8":"g"},"Z4S8":{"2":"g","8":"g"},"Z4S2":{"1":"x"},"Z4S9":{"2":"x"}},"links":[]}},{"name":"Jellyfish","english":"Jellyfish","level":4,"idea":"X-Wing mit vier Zeilen und vier Spalten: Eine Ziffer kommt in vier Zeilen nur in insgesamt vier Spalten vor. In diesen Spalten wird sie in allen anderen Zeilen gestrichen.","how":["Wie beim Swordfish, aber mit vier Zeilen (je zwei bis vier Plätze) und genau vier Spalten.","Die Ziffer in diesen vier Spalten außerhalb der vier Zeilen streichen."],"example":["Die <b>8<\/b> steht in Zeile 1, 3, 6 und 9 nur in den Spalten 2, 4, 6 und 8.","In diesen Spalten wird die 8 in den übrigen Zeilen gestrichen, z. B. in Z5S4 und Z7S2."],"tip":"Jellyfish kommen selten vor. Wenn eine Ziffer überall sehr verstreut ist, lohnt sich eher die Suche nach Ketten.","board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z1S2":"8","Z1S4":"8","Z3S4":"8","Z3S6":"8","Z6S6":"8","Z6S8":"8","Z9S2":"8","Z9S8":"8","Z5S4":"48","Z7S2":"18"},"fills":{},"shade":["Z1S1","Z1S2","Z1S3","Z1S4","Z1S5","Z1S6","Z1S7","Z1S8","Z1S9","Z3S1","Z3S2","Z3S3","Z3S4","Z3S5","Z3S6","Z3S7","Z3S8","Z3S9","Z6S1","Z6S2","Z6S3","Z6S4","Z6S5","Z6S6","Z6S7","Z6S8","Z6S9","Z9S1","Z9S2","Z9S3","Z9S4","Z9S5","Z9S6","Z9S7","Z9S8","Z9S9"],"mark":{"Z1S2":{"8":"g"},"Z1S4":{"8":"g"},"Z3S4":{"8":"g"},"Z3S6":{"8":"g"},"Z6S6":{"8":"g"},"Z6S8":{"8":"g"},"Z9S2":{"8":"g"},"Z9S8":{"8":"g"},"Z5S4":{"8":"x"},"Z7S2":{"8":"x"}},"links":[]}},{"name":"Einfache Färbung","english":"Simple Coloring (Single's Chains)","level":4,"idea":"Man verfolgt für eine Ziffer eine Kette starker Verbindungen (Einheiten mit genau zwei Plätzen) und färbt die Felder abwechselnd in zwei Farben. Genau eine der beiden Farben ist „wahr“ – entweder alle blauen oder alle grünen Felder enthalten die Ziffer.","how":["Ziffer wählen, Einheiten mit genau zwei Plätzen für sie markieren.","Ausgehend von einem Feld entlang dieser Paare abwechselnd blau/grün färben.","<b>Regel „Falle“<\/b>: Ein ungefärbtes Feld, das ein blaues <i>und<\/i> ein grünes Feld sieht, kann die Ziffer nicht haben – eine der Farben ist ja wahr.","<b>Regel „Widerspruch“<\/b>: Sehen sich zwei Felder derselben Farbe, ist diese Farbe falsch – die Ziffer in allen Feldern dieser Farbe streichen (und die andere Farbe setzen)."],"example":["Für die <b>2<\/b> gibt es genau zwei Plätze in Zeile 1 (Z1S1, Z1S6), in Spalte 6 (Z1S6, Z7S6) und in Zeile 7 (Z7S6, Z7S2).","Färbung: blau Z1S1, Z7S6 – grün Z1S6, Z7S2.","Z8S1 sieht das blaue Z1S1 (Spalte 1) und das grüne Z7S2 (Block 7). Welche Farbe auch wahr ist: Z8S1 kann keine 2 sein."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z1S1":"2","Z1S6":"2","Z7S6":"2","Z7S2":"2","Z8S1":"29"},"fills":{"Z1S1":"#cfe0f7","Z7S6":"#cfe0f7","Z1S6":"#cdeccf","Z7S2":"#cdeccf"},"shade":[],"mark":{"Z1S1":{"2":"b"},"Z7S6":{"2":"b"},"Z1S6":{"2":"g"},"Z7S2":{"2":"g"},"Z8S1":{"2":"x"}},"links":[["Z1S1","Z1S6","s"],["Z1S6","Z7S6","s"],["Z7S6","Z7S2","s"]]}},{"name":"W-Wing","english":"W-Wing","level":4,"idea":"Zwei Felder mit denselben zwei Kandidaten {X,Y}, die sich nicht sehen, werden über eine starke Verbindung von X verknüpft. Dann ist mindestens eines der beiden Felder Y.","how":["Zwei gleiche Zweier-Felder {X,Y} suchen, die sich nicht sehen.","Eine Einheit finden, in der X genau zwei Plätze hat, wobei der eine Platz das erste und der andere das zweite Feld sieht.","Y in allen Feldern streichen, die beide Zweier-Felder sehen."],"example":["Z2S2 und Z8S7 sind beide {4,8}. In Zeile 5 hat die 4 nur die Plätze Z5S2 und Z5S7.","Wäre Z2S2 nicht 8, dann wäre es 4. Dann ist Z5S2 nicht 4, also Z5S7 = 4, also ist Z8S7 nicht 4 und damit 8. Eines der beiden ist also <b>8<\/b>.","Die 8 wird in Z2S7 und Z8S2 gestrichen – sie sehen beide Felder."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z2S2":"48","Z8S7":"48","Z5S2":"4","Z5S7":"4","Z2S7":"18","Z8S2":"68"},"fills":{"Z2S2":"#cfe0f7","Z8S7":"#cfe0f7"},"shade":["Z5S1","Z5S2","Z5S3","Z5S4","Z5S5","Z5S6","Z5S7","Z5S8","Z5S9"],"mark":{"Z2S2":{"8":"b","4":"g"},"Z8S7":{"8":"b","4":"g"},"Z5S2":{"4":"g"},"Z5S7":{"4":"g"},"Z2S7":{"8":"x"},"Z8S2":{"8":"x"}},"links":[["Z2S2","Z5S2","w"],["Z5S2","Z5S7","s"],["Z5S7","Z8S7","w"]]}},{"name":"X-Kette","english":"X-Chain (Skyscraper, 2-String Kite, Turbot Fish)","level":4,"idea":"Eine Kette für <i>eine<\/i> Ziffer, in der sich starke und schwache Verbindungen abwechseln. Sie beginnt und endet mit einer starken Verbindung. Dann ist mindestens eines der beiden Enden die Ziffer. Felder, die beide Enden sehen, scheiden aus. Bekannte kurze X-Ketten heißen Skyscraper, 2-String-Kite und Turbot-Fish.","how":["Ziffer wählen und starke Verbindungen markieren (Einheiten mit genau zwei Plätzen).","Starke Verbindungen über schwache Verbindungen (Felder, die sich sehen) aneinanderhängen: stark – schwach – stark – …","Endet die Kette mit einer starken Verbindung: Die Ziffer in allen Feldern streichen, die Anfang und Ende sehen."],"example":["„Skyscraper“ für die <b>6<\/b>: In Spalte 2 nur Z2S2/Z8S2, in Spalte 7 nur Z3S7/Z8S7. Die unteren Enden Z8S2 und Z8S7 sehen sich (Zeile 8).","Höchstens eines der unteren Enden ist 6 – also ist Z2S2 oder Z3S7 eine 6.","Gestrichen wird die 6 in Feldern, die beide oberen Enden sehen: z. B. Z2S9 und Z3S1 (auch Z2S8, Z3S3)."],"tip":null,"board":{"rows":[0,1,2,3,4,5,6,7,8],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z2S2":"6","Z8S2":"6","Z8S7":"6","Z3S7":"6","Z2S9":"67","Z3S1":"56"},"fills":{"Z2S2":"#cdeccf","Z3S7":"#cdeccf"},"shade":[],"mark":{"Z2S2":{"6":"g"},"Z3S7":{"6":"g"},"Z8S2":{"6":"b"},"Z8S7":{"6":"b"},"Z2S9":{"6":"x"},"Z3S1":{"6":"x"}},"links":[["Z2S2","Z8S2","s"],["Z8S2","Z8S7","w"],["Z8S7","Z3S7","s"]]}},{"name":"XY-Kette","english":"XY-Chain","level":4,"idea":"Eine Kette aus Feldern mit genau zwei Kandidaten, in der benachbarte Felder sich sehen und eine Ziffer gemeinsam haben. Ist das Anfangsfeld nicht Z, erzwingt die Kette Feld für Feld, dass das Endfeld Z ist. Also ist Anfang oder Ende Z. Der XY-Wing ist die kürzeste XY-Kette.","how":["Mit einem Zweier-Feld {Z,A} beginnen und annehmen: Es ist nicht Z, also A.","Zu einem Zweier-Feld gehen, das dieses sieht und A enthält: Es ist nicht A, also seine andere Ziffer. So weiter.","Erreicht die Kette ein Feld, das dadurch Z wird: Z in allen Feldern streichen, die Anfang und Ende sehen."],"example":["Kette: Z1S1 {1,2} → Z1S5 {2,3} → Z4S5 {3,4} → Z4S9 {4,1}.","Ist Z1S1 nicht 1, ist es 2 → Z1S5 = 3 → Z4S5 = 4 → Z4S9 = <b>1<\/b>. Also ist Z1S1 oder Z4S9 eine 1.","Z1S9 und Z4S1 sehen beide Enden → 1 streichen."],"tip":null,"board":{"rows":[0,1,2,3,4,5],"cols":[0,1,2,3,4,5,6,7,8],"givens":{},"cands":{"Z1S1":"12","Z1S5":"23","Z4S5":"34","Z4S9":"14","Z1S9":"17","Z4S1":"16"},"fills":{"Z1S1":"#cdeccf","Z1S5":"#cfe0f7","Z4S5":"#cfe0f7","Z4S9":"#cdeccf"},"shade":[],"mark":{"Z1S1":{"1":"g"},"Z4S9":{"1":"g"},"Z1S9":{"1":"x"},"Z4S1":{"1":"x"}},"links":[["Z1S1","Z1S5","w"],["Z1S5","Z4S5","w"],["Z4S5","Z4S9","w"]]}},{"name":"Erzwingungsketten","english":"Forcing Chains, AIC","level":5,"idea":"Man verfolgt von einem Feld (oder einer Einheit) aus <i>alle<\/i> Möglichkeiten. Führen alle Möglichkeiten zum selben Ergebnis, ist dieses Ergebnis sicher.","how":["<b>Feld-Erzwingung<\/b>: Ein Feld hat z. B. die Kandidaten {3,8}. Verfolge die Folgen von „= 3“ und von „= 8“. Wird in beiden Fällen dasselbe Feld 5, ist es sicher 5.","<b>Einheiten-Erzwingung<\/b>: Eine Ziffer hat in einer Einheit mehrere Plätze. Folgt aus jedem Platz dasselbe, gilt es sicher.","<b>Alternierende Ketten (AIC)<\/b>: Verallgemeinerung von X- und XY-Kette. Starke und schwache Verbindungen dürfen beliebig zwischen Ziffern und Feldern wechseln."],"example":["Ketten lassen sich am besten mit eingetragenen Kandidaten und Notizen auf Papier verfolgen. Lange Ketten sind fehleranfällig – nach jedem Schritt prüfen."],"tip":null,"board":null},{"name":"Ausprobieren (Nishio, Verzweigung)","english":"Trial and Error, Bifurcation","level":5,"idea":"Man nimmt für ein Feld mit zwei Kandidaten eine Ziffer an und löst weiter. Führt das zu einem Widerspruch (Feld ohne Kandidaten, Ziffer doppelt), war die Annahme falsch – dann gilt die andere Ziffer.","how":["Ein Feld mit nur zwei Kandidaten wählen. Am besten eines, das viele andere beeinflusst.","Den aktuellen Stand sichern. Im Programm: Rückgängig (Strg+Z) bringt dich zurück.","Eine Ziffer annehmen und mit einfachen Techniken weiterlösen.","Bei einem Widerspruch zurückgehen und die andere Ziffer setzen. Wird das Rätsel ohne Widerspruch gelöst, war die Annahme richtig."],"example":["Puristen lehnen Ausprobieren ab, logisch ist es aber korrekt. Erzwingungsketten sind im Grunde nur geordnetes Ausprobieren."],"tip":null,"board":null}]};
+</script>
 <script>
 /* Sudoku-Kern: Gebietskarte, Löser, Lösungstechniken, Bewertung, Tipps,
  * Generator und Spielzustand. JavaScript-Fassung des Python-Programms
@@ -159,6 +181,10 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
   const DIAG_DOWN = range(9).map(r => r * 9 + r);
   const DIAG_UP = range(9).map(r => r * 9 + 8 - r);
   const DIAG_CELLS = new Set([...DIAG_DOWN, ...DIAG_UP]);
+  // Farbsudoku: Gruppe = Position im 3x3-Block (0 = links oben … 8 = rechts unten)
+  const COLOR_OF = range(81).map(i => (Math.floor(i / 9) % 3) * 3 + i % 3);
+  const COLOR_GROUPS = range(9).map(k => range(81).filter(i => COLOR_OF[i] === k));
+  const COLOR_NAMES = ["Rot", "Orange", "Gelb", "Grün", "Türkis", "Blau", "Violett", "Rosa", "Grau"];
   const REGION_CHARS = "123456789";
   const LEVEL_NAMES = { 1: "Leicht", 2: "Mittel", 3: "Schwer", 4: "Sehr schwer", 5: "Extrem" };
   const MIN_GIVENS = { 1: 36, 2: 28, 3: 24, 4: 17, 5: 17 };
@@ -231,15 +257,20 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
   }
 
   class Layout {
-    constructor(regions = null, diagonals = false) {
+    constructor(regions = null, diagonals = false, colors = false) {
       const reg = regions ? normalize(Array.from(regions)) : CLASSIC_REGIONS.slice();
       const probs = regionProblems(reg);
       if (probs.length) throw new Error("Ungültige Gebietskarte: " + probs.join(" "));
       this.regionOf = reg;
       this.regions = range(9).map(g => range(81).filter(i => reg[i] === g));
       this.diagonals = !!diagonals;
+      this.colors = !!colors;
+      const classicReg = reg.every((g, i) => g === CLASSIC_REGIONS[i]);
+      if (this.colors && !classicReg) throw new Error("Farbsudoku gibt es nur mit 3x3-Blöcken.");
       this.units = [...ROWS, ...COLS, ...this.regions];
       if (this.diagonals) this.units.push(DIAG_DOWN, DIAG_UP);
+      this.colorBase = this.units.length;
+      if (this.colors) this.units.push(...COLOR_GROUPS);
       this.unitsOf = range(81).map(i => this.units.map((u, k) => u.includes(i) ? k : -1).filter(k => k >= 0));
       this.sees = new Uint8Array(81 * 81);
       this.peers = range(81).map(i => {
@@ -251,10 +282,11 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       });
       this.classicRegions = reg.every((g, i) => g === CLASSIC_REGIONS[i]);
       this.squiggly = !this.classicRegions;
-      this.classic = this.classicRegions && !this.diagonals;
+      this.classic = this.classicRegions && !this.diagonals && !this.colors;
     }
     key() { return this.regionOf.map(g => REGION_CHARS[g]).join(""); }
     get kind() {
+      if (this.colors) return this.diagonals ? "Farbsudoku-X" : "Farbsudoku";
       if (this.squiggly) return this.diagonals ? "Squiggly-X" : "Squiggly";
       return this.diagonals ? "X-Sudoku" : "Sudoku";
     }
@@ -262,10 +294,13 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       if (u < 9) return `Zeile ${u + 1}`;
       if (u < 18) return `Spalte ${u - 8}`;
       if (u < 27) return `${this.squiggly ? "Gebiet" : "Block"} ${u - 17}`;
+      if (u >= this.colorBase) return `der Farbgruppe ${COLOR_NAMES[u - this.colorBase]}`;
       return u === 27 ? "der Diagonale ↘" : "der Diagonale ↙";
     }
     canSee(a, b) { return this.sees[a * 81 + b] === 1; }
-    equals(o) { return o instanceof Layout && o.diagonals === this.diagonals && o.key() === this.key(); }
+    equals(o) {
+      return o instanceof Layout && o.diagonals === this.diagonals && o.colors === this.colors && o.key() === this.key();
+    }
   }
   const CLASSIC = new Layout();
 
@@ -303,8 +338,14 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     return chars.map(c => (c >= "1" && c <= "9") ? +c - 1 : "abcdefghi".indexOf(c));
   }
   function parseCode(text) {
-    let t = text.trim(), diagonals = false;
-    if (t.slice(-2).toUpperCase() === "|X") { diagonals = true; t = t.slice(0, -2); }
+    let t = text.trim(), diagonals = false, colors = false;
+    const f = t.lastIndexOf("|");
+    if (f >= 0) {
+      const flags = t.slice(f + 1).trim().toUpperCase();
+      if (flags && flags.length <= 2 && /^[XF]+$/.test(flags)) {
+        diagonals = flags.includes("X"); colors = flags.includes("F"); t = t.slice(0, f);
+      }
+    }
     let grid = null, layout = CLASSIC;
     const k = t.lastIndexOf("|");
     if (k >= 0) {
@@ -312,13 +353,14 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       catch (e) { grid = null; layout = CLASSIC; }
     }
     if (!grid) grid = parsePuzzle(t);
-    return [grid, diagonals ? new Layout(layout.regionOf, true) : layout];
+    return [grid, diagonals || colors ? new Layout(layout.regionOf, diagonals, colors) : layout];
   }
   const toString = (grid) => grid.map(v => v ? String(v) : ".").join("");
   function toCode(grid, layout = CLASSIC) {
     let code = toString(grid);
     if (layout.squiggly) code += "|" + layout.key();
-    if (layout.diagonals) code += "|X";
+    const flags = (layout.diagonals ? "X" : "") + (layout.colors ? "F" : "");
+    if (flags) code += "|" + flags;
     return code;
   }
 
@@ -332,20 +374,25 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       if (ROW_OF[i] === COL_OF[i]) D1[i] = 0;
       if (ROW_OF[i] + COL_OF[i] === 8) D2[i] = 1;
     }
+    // Farbsudoku: Farbgruppe je Feld, 9 = keine (Dummy, nie belegt)
+    const GRP = layout.colors ? COLOR_OF : new Array(81).fill(9);
     const g = Array.from(grid);
     const rows = new Int32Array(9), cols = new Int32Array(9), boxes = new Int32Array(9), diag = new Int32Array(3);
+    const grp = new Int32Array(10);
     for (let i = 0; i < 81; i++) {
       const v = g[i];
       if (!v) continue;
       const b = 1 << v, r = ROW_OF[i], c = COL_OF[i], x = BOX[i];
-      if ((rows[r] | cols[c] | boxes[x] | diag[D1[i]] | diag[D2[i]]) & b) return [0, null];
+      if ((rows[r] | cols[c] | boxes[x] | diag[D1[i]] | diag[D2[i]] | grp[GRP[i]]) & b) return [0, null];
       rows[r] |= b; cols[c] |= b; boxes[x] |= b;
+      if (GRP[i] < 9) grp[GRP[i]] |= b;
       if (D1[i] < 2) diag[0] |= b;
       if (D2[i] < 2) diag[1] |= b;
     }
     const empties = range(81).filter(i => !g[i]);
     const units = layout.units;
-    const placed = (u) => u < 9 ? rows[u] : u < 18 ? cols[u - 9] : u < 27 ? boxes[u - 18] : diag[u - 27];
+    const cb = layout.colorBase;
+    const placed = (u) => u < 9 ? rows[u] : u < 18 ? cols[u - 9] : u < 27 ? boxes[u - 18] : u >= cb ? grp[u - cb] : diag[u - 27];
     const state = { count: 0, first: null, nodes: 0 };
     const masks = new Int32Array(81);
 
@@ -355,7 +402,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       masks.fill(0);
       for (const i of empties) {
         if (g[i]) continue;
-        const m = ALL & ~(rows[ROW_OF[i]] | cols[COL_OF[i]] | boxes[BOX[i]] | diag[D1[i]] | diag[D2[i]]);
+        const m = ALL & ~(rows[ROW_OF[i]] | cols[COL_OF[i]] | boxes[BOX[i]] | diag[D1[i]] | diag[D2[i]] | grp[GRP[i]]);
         const n = POP[m];
         if (n === 0) return false;
         masks[i] = m;
@@ -400,15 +447,17 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       }
       for (const [cell, d] of options) {
         const b = 1 << d, r = ROW_OF[cell], c = COL_OF[cell], x = BOX[cell];
-        if ((rows[r] | cols[c] | boxes[x] | diag[D1[cell]] | diag[D2[cell]]) & b) continue;
-        const d1 = D1[cell], d2 = D2[cell];
+        if ((rows[r] | cols[c] | boxes[x] | diag[D1[cell]] | diag[D2[cell]] | grp[GRP[cell]]) & b) continue;
+        const d1 = D1[cell], d2 = D2[cell], k = GRP[cell];
         g[cell] = d; rows[r] |= b; cols[c] |= b; boxes[x] |= b;
         if (d1 < 2) diag[0] |= b;
         if (d2 < 2) diag[1] |= b;
+        if (k < 9) grp[k] |= b;
         const stop = rec();
         g[cell] = 0; rows[r] ^= b; cols[c] ^= b; boxes[x] ^= b;
         if (d1 < 2) diag[0] ^= b;
         if (d2 < 2) diag[1] ^= b;
+        if (k < 9) grp[k] ^= b;
         if (stop) return true;
       }
       return false;
@@ -789,9 +838,9 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     for (let k = 0; k < 300; k++) {
       const prefix = used.length ? `Nach Ausschlüssen (${[...new Set(used)].join(", ")}) gilt: ` : "";
       let r = s.findNakedSingle();
-      if (r) return { cell: r[0], digit: r[1], text: `${prefix}In ${cellName(r[0])} ist nur noch die ${r[1]} möglich.`, techniques: used };
+      if (r) return { cell: r[0], digit: r[1], text: `${prefix}In ${cellName(r[0])} ist nur noch die ${r[1]} möglich.`, techniques: used, single: "Nackter Einzelner" };
       r = s.findHiddenSingle();
-      if (r) return { cell: r[0], digit: r[1], text: `${prefix}Die ${r[1]} passt in ${layout.unitName(r[2])} nur in dieses Feld (${cellName(r[0])}).`, techniques: used };
+      if (r) return { cell: r[0], digit: r[1], text: `${prefix}Die ${r[1]} passt in ${layout.unitName(r[2])} nur in dieses Feld (${cellName(r[0])}).`, techniques: used, single: "Versteckter Einzelner" };
       let progressed = false;
       for (const [name, , fn] of TECHNIQUES.slice(2)) if (fn(s)) { used.push(name); progressed = true; break; }
       if (!progressed) return null;
@@ -873,13 +922,13 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     return puzzle;
   }
 
-  function generate(level = 2, { rng = makeRng(), timeout = 20000, squiggly = false, diagonals = false } = {}) {
+  function generate(level = 2, { rng = makeRng(), timeout = 20000, squiggly = false, diagonals = false, colors = false } = {}) {
     const start = Date.now();
     let best = null;
     for (;;) {
       let layout, solution;
       if (squiggly) [layout, solution] = randomLayout(rng, diagonals);
-      else { layout = diagonals ? new Layout(null, true) : CLASSIC; solution = randomSolution(rng, layout); }
+      else { layout = diagonals || colors ? new Layout(null, diagonals, colors) : CLASSIC; solution = randomSolution(rng, layout); }
       const puzzle = dig(solution, level, rng, layout);
       const actual = rate(puzzle, MAX_LEVEL, layout);
       if (actual === level) return { puzzle, solution, level: actual, layout };
@@ -906,6 +955,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       this.layout = CLASSIC;
       this.editRegions = null;
       this.editDiagonals = false;
+      this.editColors = false;
       this._undo = []; this._redo = [];
       this._editBackup = null;
     }
@@ -922,7 +972,9 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       return this.layout.squiggly;
     }
     get diagonals() { return this.editing ? this.editDiagonals : this.layout.diagonals; }
+    get colors() { return this.editing ? this.editColors : this.layout.colors; }
     kind() {
+      if (this.colors && !this.squiggly) return this.diagonals ? "Farbsudoku-X" : "Farbsudoku";
       if (this.squiggly) return this.diagonals ? "Squiggly-X" : "Squiggly";
       return this.diagonals ? "X-Sudoku" : "Sudoku";
     }
@@ -931,7 +983,8 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       if (this.editing) {
         const regions = this.editRegions || CLASSIC_REGIONS;
         if (regionProblems(regions).length) return null;
-        return new Layout(regions, this.editDiagonals);
+        const classic = regions.every((g, i) => g === CLASSIC_REGIONS[i]);
+        return new Layout(regions, this.editDiagonals, this.editColors && classic);
       }
       return this.layout;
     }
@@ -1018,7 +1071,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     digitCount(d) { return this.values.filter(v => v === d).length; }
     hasProgress() { return this.values.some((v, i) => v && !this.givens[i]) || this.notes.some(n => n); }
 
-    startEditing(prefill = null, regions = null, squiggly = false, diagonals = false) {
+    startEditing(prefill = null, regions = null, squiggly = false, diagonals = false, colors = false) {
       const backup = this.givens.some(g => g) ? this.toDict() : null;
       this._init();
       this._editBackup = backup;
@@ -1026,9 +1079,14 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       const nonClassic = regions && !regions.every((g, i) => g === CLASSIC_REGIONS[i]);
       if (squiggly || nonClassic) this.editRegions = regions ? Array.from(regions) : CLASSIC_REGIONS.slice();
       this.editDiagonals = !!diagonals;
+      this.editColors = !!colors && !this.editRegions;
       this.editing = true;
     }
     setDiagonals(on) { if (!this.editing) return false; this.editDiagonals = !!on; return true; }
+    setColors(on) {
+      if (!this.editing || (on && this.editRegions)) return false;
+      this.editColors = !!on; return true;
+    }
     setRegion(i, region) {
       if (!this.editing || !this.editRegions || this.editRegions[i] === region) return false;
       this.editRegions[i] = region; return true;
@@ -1038,7 +1096,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     finishEditing() {
       const grid = Array.from(this.values);
       const n = grid.filter(v => v).length;
-      let layout = new Layout(null, this.editDiagonals);
+      let layout = new Layout(null, this.editDiagonals, this.editColors);
       if (this.editRegions) {
         const problems = regionProblems(this.editRegions);
         if (problems.length) return ["regions", problems];
@@ -1058,6 +1116,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
         notes: Array.from(this.notes), level: this.level, elapsed: Math.round(this.elapsed * 10) / 10,
         finished: this.finished, revealed: this.revealed,
         regions: this.layout.squiggly ? this.layout.key() : null, diagonals: this.layout.diagonals,
+        colors: this.layout.colors,
       };
     }
     fromDict(data) {
@@ -1065,7 +1124,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       const values = parsePuzzle(data.values || data.puzzle);
       const notes = data.notes || new Array(81).fill(0);
       if (notes.length !== 81) throw new Error("Notizen unvollständig");
-      const layout = new Layout(data.regions ? parseRegions(data.regions) : null, !!data.diagonals);
+      const layout = new Layout(data.regions ? parseRegions(data.regions) : null, !!data.diagonals, !!data.colors);
       if (countSolutions(puzzle, 2, layout) !== 1) throw new Error("Das gespeicherte Rätsel ist nicht eindeutig lösbar.");
       this.loadPuzzle(puzzle, null, data.level ?? null, layout);
       for (let i = 0; i < 81; i++) {
@@ -1079,6 +1138,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
 
   const api = {
     ALL, POP, DIGITS_OF, ROWS, COLS, ROW_OF, COL_OF, CLASSIC_REGIONS, DIAG_DOWN, DIAG_UP, DIAG_CELLS,
+    COLOR_OF, COLOR_GROUPS, COLOR_NAMES,
     LEVEL_NAMES, MAX_LEVEL, TECHNIQUES, Layout, CLASSIC, Game, LogicSolver,
     makeRng, regionProblems, normalize, cellName, candidates, conflicts,
     parsePuzzle, parseRegions, parseCode, toString, toCode,
@@ -1116,10 +1176,15 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
   };
   const REGION_COLORS = ["#fde2e4", "#dcefd0", "#d9e8fb", "#fff0bf", "#eadcfb",
     "#cdeee8", "#ffdcc2", "#e4e7ec", "#f7d6ea"];
+  // Farbsudoku: Rot, Orange, Gelb, Grün, Türkis, Blau, Violett, Rosa, Grau (wie im PC-Programm)
+  const GROUP_COLORS = ["#f5b3b3", "#fbcf9a", "#f6ea8c", "#c4e6a8", "#a9e0db",
+    "#b9cff5", "#d3c2f2", "#f0c2ef", "#d6d6d6"];
   const NOTE_POS = [0.19, 0.5, 0.81];
   const FONT = getComputedStyle(document.documentElement).getPropertyValue("--font") || "sans-serif";
   const LEVELS = C.LEVEL_NAMES;
-  const VARIANTS = [["Klassisch", false, false], ["Squiggly", true, false], ["X-Sudoku", false, true], ["Squiggly-X", true, true]];
+  // [Name, Squiggly, Diagonalen, Farbgruppen]
+  const VARIANTS = [["Klassisch", false, false, false], ["Squiggly", true, false, false], ["X-Sudoku", false, true, false],
+    ["Squiggly-X", true, true, false], ["Farbsudoku", false, false, true], ["Farbsudoku-X", false, true, true]];
 
   function darker(hex, f = 0.9) {
     const n = (k) => Math.floor(parseInt(hex.slice(k, k + 2), 16) * f);
@@ -1145,7 +1210,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
   const S = {
     game: new C.Game(), selected: null, hover: null, clickNote: null, noteMode: false,
     showErrors: false, paused: false, generating: false, hintCell: null, statusMsg: "",
-    regionMode: false, paintRegion: 0, painting: false, unsure: new Set(),
+    regionMode: false, paintRegion: 0, painting: false, unsure: new Set(), hintTech: null,
     input: "mouse", lastTick: performance.now(), cell: 40, genKind: "Rätsel",
   };
   const canvas = $("board"), ctx = canvas.getContext("2d");
@@ -1196,9 +1261,11 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     const selVal = S.selected !== null && !hide ? g.values[S.selected] : 0;
     const reg = g.regionMap();
     const sq = g.squiggly || (g.editing && !!g.editRegions);
-    const colored = sq && (settings.colored || S.regionMode);
+    const groups = g.colors && !sq;
+    const colored = groups || (sq && (settings.colored || S.regionMode));
     const diag = g.diagonals ? C.DIAG_CELLS : new Set();
-    const diagShade = diag.size > 0 && settings.diagStyle === "shade";
+    // beim Farbsudoku würden hinterlegte Diagonalen wie eine weitere Farbe wirken -> Linien
+    const diagShade = diag.size > 0 && settings.diagStyle === "shade" && !groups;
     let red = new Set();
     if (g.editing || S.showErrors) red = g.conflicts();
     if (S.showErrors && !g.editing) g.wrongCells().forEach(i => red.add(i));
@@ -1206,7 +1273,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
 
     for (let i = 0; i < 81; i++) {
       const r = Math.floor(i / 9), c = i % 9, x = c * s, y = r * s;
-      let fill = colored ? REGION_COLORS[reg[i]] : COL.bg;
+      let fill = groups ? GROUP_COLORS[C.COLOR_OF[i]] : colored ? REGION_COLORS[reg[i]] : COL.bg;
       if (diagShade && diag.has(i)) fill = colored ? darker(fill) : COL.diag;
       const hov = !hide && S.hover && S.hover[0] === i ? S.hover : null;
       if (!hide && !S.regionMode) {
@@ -1395,7 +1462,11 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     eb.textContent = S.regionMode ? "Fertig malen" : "Gebiete malen";
     const db = $("btnDiag");
     db.classList.toggle("active", g.editDiagonals);
-    db.textContent = "Diagonalen: " + (g.editDiagonals ? "an" : "aus");
+    db.textContent = g.editDiagonals ? "✓ Diagonalen" : "Diagonalen";
+    const cb = $("btnColors");
+    cb.style.display = g.editRegions ? "none" : "";
+    cb.classList.toggle("active", g.editColors);
+    cb.textContent = g.editColors ? "✓ Farben" : "Farben";
   }
 
   function statusPrefix() {
@@ -1411,6 +1482,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     document.title = pre ? `Sudoku – ${pre}` : "Sudoku";
     $("status").textContent = S.statusMsg;
     $("status").title = S.statusMsg;
+    $("status").classList.toggle("link", !!S.hintTech && S.statusMsg.startsWith("Tipp:"));
   }
   function status(msg) { S.statusMsg = msg; renderStatus(); }
 
@@ -1561,8 +1633,9 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     const h = C.findHint(g.values, g.layout);
     if (!h) { status("Mit den eingebauten Techniken kein Schritt gefunden – „Feld aufdecken“ hilft weiter."); return; }
     S.selected = h.cell; S.hintCell = h.cell;
+    S.hintTech = techForHint(h);
     render();
-    status("Tipp: " + h.text);
+    status("Tipp: " + h.text + (S.hintTech ? "  ⓘ Erklärung" : ""));
   }
   function revealCell() {
     if (!playable()) return;
@@ -1582,7 +1655,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     if (S.game.editing) return;
     const items = [["Tipp: nächster logischer Schritt", hint], ["Ausgewähltes Feld aufdecken", revealCell],
       ["Kandidaten automatisch eintragen", fillCandidates], ["Alle Notizen löschen", clearNotes],
-      ["Wiederholen (Strg+Y)", redo], ["Lösung anzeigen", showSolution]];
+      ["Wiederholen (Strg+Y)", redo], ["Lösung anzeigen", showSolution], ["Lösungstechniken erklärt", () => techDialog()]];
     dialog(`<h2>Hilfen</h2><div class="menu" style="display:grid;gap:6px" id="hatItems"></div>`,
       [{ label: "Schließen" }], {
         onOpen: (d) => {
@@ -1604,16 +1677,17 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     return true;
   }
 
-  async function newGame(level, squiggly, diagonals, confirm = true) {
+  async function newGame(level, squiggly, diagonals, colors = false, confirm = true) {
     if (S.generating) return;
     if (confirm && !(await confirmDiscard())) return;
-    const kind = squiggly ? (diagonals ? "Squiggly-X" : "Squiggly") : (diagonals ? "X-Sudoku" : "Rätsel");
+    let kind = squiggly ? (diagonals ? "Squiggly-X" : "Squiggly") : new C.Layout(null, diagonals, colors).kind;
+    if (kind === "Sudoku") kind = "Rätsel";
     S.generating = true; S.paused = false; S.regionMode = false;
     S.statusMsg = `Erzeuge ${kind} (${LEVELS[level]}) …`;
     if (S.game.editing) S.game.cancelEditing();
     layout(); render();
     setTimeout(() => {
-      const r = C.generate(level, { squiggly, diagonals });
+      const r = C.generate(level, { squiggly, diagonals, colors });
       S.game.loadPuzzle(r.puzzle, r.solution, r.level, r.layout);
       S.generating = false; S.selected = null; S.hintCell = null; S.showErrors = false; S.hover = null;
       S.lastTick = performance.now();
@@ -1625,10 +1699,10 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
   }
 
   // ---------------------------------------------------------------- Eingabemodus
-  async function startEdit({ prefill = null, squiggly = false, regions = null, diagonals = false } = {}) {
+  async function startEdit({ prefill = null, squiggly = false, regions = null, diagonals = false, colors = false } = {}) {
     if (S.generating) return;
     if (!prefill && !regions && !(await confirmDiscard())) return;
-    S.game.startEditing(prefill, regions, squiggly, diagonals);
+    S.game.startEditing(prefill, regions, squiggly, diagonals, colors);
     S.paused = false; S.noteMode = false; S.selected = 0; S.hintCell = null; S.unsure = new Set();
     S.regionMode = squiggly && !regions && !prefill;
     if (S.regionMode) { S.paintRegion = 0; S.painted = false; regionStatus(); }
@@ -1683,6 +1757,13 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     S.statusMsg = g.editDiagonals ? "Diagonalen EIN (X-Sudoku)." : "Diagonalen AUS.";
     render();
   }
+  function toggleColors() {
+    const g = S.game;
+    if (!g.editing) { status("Farbgruppen lassen sich im Eingabemodus ein- und ausschalten."); return; }
+    if (!g.setColors(!g.editColors)) { status("Farbsudoku gibt es nur mit 3×3-Blöcken (nicht mit Squiggly-Gebieten)."); return; }
+    S.statusMsg = g.editColors ? "Farbgruppen EIN (Farbsudoku)." : "Farbgruppen AUS.";
+    render();
+  }
   function paintCell(i) { if (S.game.setRegion(i, S.paintRegion)) { S.painted = true; regionStatus(); render(); } }
   function regionStatus() {
     const problems = C.regionProblems(S.game.regionMap());
@@ -1697,7 +1778,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
     try { [grid, lay] = C.parseCode(text); }
     catch (e) { info("Einfügen", "Kein gültiges Rätsel erkannt.\n" + e.message); return; }
     if (!(await confirmDiscard())) return;
-    await startEdit({ prefill: grid, regions: lay.squiggly ? lay.regionOf : null, diagonals: lay.diagonals });
+    await startEdit({ prefill: grid, regions: lay.squiggly ? lay.regionOf : null, diagonals: lay.diagonals, colors: lay.colors });
     finishEdit();
   }
   function pasteDialog() {
@@ -1763,9 +1844,10 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       include = v;
     }
     const reg = g.regionMap();
+    const groups = g.colors && !g.squiggly;
     const colored = g.squiggly && settings.colored;
     const diag = g.diagonals ? C.DIAG_CELLS : new Set();
-    const lines = diag.size && settings.diagStyle === "lines";
+    const lines = diag.size && (settings.diagStyle === "lines" || groups);
     let rows = "";
     for (let r = 0; r < 9; r++) {
       rows += "<tr>";
@@ -1773,7 +1855,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
         const i = r * 9 + c, v = g.values[i], cls = [];
         if (c < 8 && reg[i] !== reg[i + 1]) cls.push("br");
         if (r < 8 && reg[i] !== reg[i + 9]) cls.push("bb");
-        let bg = colored ? REGION_COLORS[reg[i]] : "";
+        let bg = groups ? GROUP_COLORS[C.COLOR_OF[i]] : colored ? REGION_COLORS[reg[i]] : "";
         if (diag.has(i) && !lines) bg = colored ? darker(bg) : "#e4e4e4";
         let txt = "";
         if (v && (g.givens[i] || g.editing)) txt = v;
@@ -1809,7 +1891,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
       <div style="font-size:13px;color:#666;margin:10px 0 4px">Bedienung</div>
       <div class="seg" id="mInput"><button data-v="auto">automatisch</button><button data-v="mouse">Maus</button><button data-v="touch">Finger</button></div>
       <h3>Hilfe</h3>
-      <div class="grid2"><button id="mHelp">Bedienung</button><button id="mClose">Schließen</button></div>
+      <div class="grid3"><button id="mHelp">Bedienung</button><button id="mTech">Lösungs&shy;techniken</button><button id="mClose">Schließen</button></div>
     </div>`;
     dialog(html, [], {
       onOpen: (d) => {
@@ -1822,10 +1904,10 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
         mark();
         d.querySelectorAll("#mTabs button").forEach(b => b.onclick = () => { tab = +b.dataset.k; settings.lastVariant = tab; saveSettings(); mark(); });
         d.querySelectorAll("#mLevels button").forEach(b => b.onclick = () => {
-          close(); const [, sq, dg] = VARIANTS[tab]; newGame(+b.dataset.l, sq, dg);
+          close(); const [, sq, dg, co] = VARIANTS[tab]; newGame(+b.dataset.l, sq, dg, co);
         });
         d.querySelectorAll("#mOwn button").forEach(b => b.onclick = () => {
-          close(); const [, sq, dg] = VARIANTS[+b.dataset.k]; startEdit({ squiggly: sq, diagonals: dg });
+          close(); const [, sq, dg, co] = VARIANTS[+b.dataset.k]; startEdit({ squiggly: sq, diagonals: dg, colors: co });
         });
         q("#mPaste").onclick = () => { close(); pasteDialog(); };
         q("#mCopy").onclick = () => { close(); copyCode(); };
@@ -1839,6 +1921,7 @@ body { overscroll-behavior: none; touch-action: manipulation; -webkit-user-selec
           settings.input = b.dataset.v; saveSettings(); S.input = detectInput(); S.hover = null; mark(); layout(); render();
         });
         q("#mHelp").onclick = () => { close(); help(); };
+        q("#mTech").onclick = () => { close(); techDialog(); };
         q("#mClose").onclick = close;
       },
     });
@@ -1868,10 +1951,142 @@ Fehler anzeigen · Prüfen
 VARIANTEN
 Squiggly: 9 unregelmäßige Gebiete statt Blöcke.
 X-Sudoku: zusätzlich beide Diagonalen 1–9.
+Farbsudoku: Felder an derselben Stelle ihres Blocks haben
+dieselbe Farbe; jede Farbgruppe enthält 1–9 genau einmal.
 Eigenes Squiggly: zuerst Gebiete malen (Farbe wählen,
 Felder antippen oder überstreichen).
+Im Eingabemodus schalten „Diagonalen“ und „Farben“ die
+Zusatzregeln ein und aus.
+
+LÖSUNGSTECHNIKEN
+Menü → Lösungstechniken erklärt alle Techniken mit Beispielen.
+Nach einem Tipp öffnet ein Tippen auf den Tipp-Text die passende
+Erklärung.
 
 Der Spielstand wird automatisch auf diesem Gerät gespeichert.`);
+  }
+
+  // ---------------------------------------------------------------- Lösungstechniken
+  const TECH = window.SUDOKU_TECH || { techniques: [], basics: [], approach: [], levels: {} };
+  const LEVEL_COLORS = { 1: "#2e7d32", 2: "#1f78b4", 3: "#e08a00", 4: "#c0392b", 5: "#6a1b9a" };
+
+  function findTech(name) {
+    return TECH.techniques.find(t => t.name === name || (name.includes("Quadrupel") && t.name.includes("Quadrupel")));
+  }
+  // Technik zum Tipp: die schwierigste vorher angewandte, sonst der Einzelne selbst (wie im PC-Programm)
+  function techForHint(h) {
+    const lvl = Object.fromEntries(C.TECHNIQUES.map(([n, l]) => [n, l]));
+    const used = [...new Set(h.techniques || [])];
+    if (used.length) {
+      let best = used[0];
+      for (const n of used) if ((lvl[n] || 0) >= (lvl[best] || 0)) best = n;
+      return best;
+    }
+    return h.single || null;
+  }
+  // Text mit <b>, <i>, <font color> aus der Technik-Datei (eigene Inhalte) -> HTML
+  const rich = (t) => t.replace(/<font color=['"]?(#[0-9a-fA-F]{6})['"]?>/g, '<span style="color:$1">').replace(/<\/font>/g, "</span>");
+
+  function svgBoard(spec) {
+    const cs = 36, lab = 16, rows = spec.rows, cols = spec.cols;
+    const reg = spec.regions || C.CLASSIC_REGIONS;
+    const W = cs * cols.length, H = cs * rows.length;
+    const cellOf = (ref) => { const [z, sp] = ref.slice(1).split("S"); return [+z - 1, +sp - 1]; };
+    const X = (c) => lab + (c - cols[0]) * cs, Y = (r) => lab + (r - rows[0]) * cs;
+    const shade = new Set(spec.shade);
+    let o = `<svg class="board" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W + lab + 3} ${H + lab + 3}" width="${Math.round((W + lab + 3) * 1.25)}">`;
+    for (const r of rows) for (const c of cols) {
+      const ref = `Z${r + 1}S${c + 1}`;
+      const fill = spec.fills[ref] || (shade.has(ref) ? "#eef1f5" : "#fff");
+      o += `<rect x="${X(c)}" y="${Y(r)}" width="${cs}" height="${cs}" fill="${fill}"/>`;
+    }
+    for (const r of rows) o += `<text x="${lab / 2}" y="${Y(r) + cs / 2 + 3.5}" font-size="10" fill="#888" text-anchor="middle">${r + 1}</text>`;
+    for (const c of cols) o += `<text x="${X(c) + cs / 2}" y="${lab - 5}" font-size="10" fill="#888" text-anchor="middle">${c + 1}</text>`;
+    for (let k = 1; k < cols.length; k++) o += `<line x1="${lab + k * cs}" y1="${lab}" x2="${lab + k * cs}" y2="${lab + H}" stroke="#b8b8b8" stroke-width="1"/>`;
+    for (let k = 1; k < rows.length; k++) o += `<line x1="${lab}" y1="${lab + k * cs}" x2="${lab + W}" y2="${lab + k * cs}" stroke="#b8b8b8" stroke-width="1"/>`;
+    for (const r of rows) for (const c of cols) {
+      const i = r * 9 + c;
+      if (c !== cols[cols.length - 1] && reg[i] !== reg[i + 1]) o += `<line x1="${X(c) + cs}" y1="${Y(r)}" x2="${X(c) + cs}" y2="${Y(r) + cs}" stroke="#222" stroke-width="2.2"/>`;
+      if (r !== rows[rows.length - 1] && reg[i] !== reg[i + 9]) o += `<line x1="${X(c)}" y1="${Y(r) + cs}" x2="${X(c) + cs}" y2="${Y(r) + cs}" stroke="#222" stroke-width="2.2"/>`;
+    }
+    o += `<rect x="${lab}" y="${lab}" width="${W}" height="${H}" fill="none" stroke="#222" stroke-width="2.2"/>`;
+    for (const [a, b, t] of spec.links) {
+      const [ra, ca] = cellOf(a), [rb, cb] = cellOf(b);
+      o += `<line x1="${X(ca) + cs / 2}" y1="${Y(ra) + cs / 2}" x2="${X(cb) + cs / 2}" y2="${Y(rb) + cs / 2}" stroke="#d35400" stroke-width="2"${t === "w" ? ' stroke-dasharray="5 4"' : ""}/>`;
+    }
+    for (const [ref, v] of Object.entries(spec.givens)) {
+      const [r, c] = cellOf(ref);
+      o += `<text x="${X(c) + cs / 2}" y="${Y(r) + cs * .72}" font-size="${cs * .6}" fill="#333" text-anchor="middle">${v}</text>`;
+    }
+    const fs = cs * .32;
+    for (const [ref, ds] of Object.entries(spec.cands)) {
+      const [r, c] = cellOf(ref), marks = spec.mark[ref] || {};
+      for (const d of ds) {
+        const sr = Math.floor((+d - 1) / 3), sc = (+d - 1) % 3;
+        const cx = X(c) + cs * (.19 + .31 * sc), cy = Y(r) + cs * (.19 + .31 * sr), m = marks[d];
+        if (m === "g" || m === "b") {
+          o += `<circle cx="${cx}" cy="${cy}" r="${fs * .62}" fill="${m === "g" ? "#2e7d32" : "#1f5fa8"}"/>`;
+          o += `<text x="${cx}" y="${cy + fs * .36}" font-size="${fs}" font-weight="bold" fill="#fff" text-anchor="middle">${d}</text>`;
+        } else if (m === "x") {
+          o += `<text x="${cx}" y="${cy + fs * .36}" font-size="${fs}" font-weight="bold" fill="#c62828" text-anchor="middle">${d}</text>`;
+          o += `<line x1="${cx - fs * .55}" y1="${cy + fs * .55}" x2="${cx + fs * .55}" y2="${cy - fs * .55}" stroke="#c62828" stroke-width="1.4"/>`;
+        } else {
+          o += `<text x="${cx}" y="${cy + fs * .36}" font-size="${fs}" fill="#444" text-anchor="middle">${d}</text>`;
+        }
+      }
+    }
+    return o + "</svg>";
+  }
+
+  function techDialog(name = null) {
+    const list = () => {
+      let h = `<div class="list"><button data-p="basics">Grundbegriffe</button><button data-p="approach">Empfohlene Vorgehensweise</button>`;
+      let last = null;
+      TECH.techniques.forEach((t, k) => {
+        if (t.level !== last) { last = t.level; h += `<h3 style="color:${LEVEL_COLORS[last]}">Stufe ${TECH.levels[last]}</h3>`; }
+        h += `<button data-p="${k}">${esc(t.name)}</button>`;
+      });
+      return h + "</div>";
+    };
+    const page = (p) => {
+      const back = `<div class="head"><button data-p="list">← Übersicht</button></div>`;
+      if (p === "basics") {
+        return back + `<h2>Grundbegriffe</h2>${svgBoard(TECH.basics_board)}<ul>${TECH.basics.map(b => `<li>${rich(b)}</li>`).join("")}</ul>
+          <h4>Legende der Beispiele</h4><p><span style="color:#2e7d32"><b>Grün</b></span> bzw. <span style="color:#1f5fa8"><b>blau</b></span>
+          hinterlegt: Kandidaten, die das Muster bilden. <span style="color:#c62828"><b>Rot durchgestrichen</b></span>: Kandidat, der
+          gestrichen werden darf. Orange Linien: Verbindungen einer Kette (durchgezogen = stark, gestrichelt = schwach).</p>`;
+      }
+      if (p === "approach") {
+        return back + `<h2>Empfohlene Vorgehensweise</h2><ol>${TECH.approach.map(b => `<li>${rich(b)}</li>`).join("")}</ol>
+          <h4>In der App</h4><ul><li><b>Zauberhut → Tipp</b> zeigt den nächsten Schritt; Tippen auf den Tipp-Text öffnet die Erklärung.</li>
+          <li><b>Menü → Schwierigkeit analysieren</b> zeigt, welche Techniken wie oft nötig sind.</li>
+          <li><b>Zauberhut → Kandidaten automatisch eintragen</b> erspart das Notieren.</li></ul>`;
+      }
+      const k = +p, t = TECH.techniques[k];
+      const prev = k > 0 ? `<button data-p="${k - 1}">← ${esc(TECH.techniques[k - 1].name)}</button>` : "<span></span>";
+      const next = k < TECH.techniques.length - 1 ? `<button data-p="${k + 1}">${esc(TECH.techniques[k + 1].name)} →</button>` : "<span></span>";
+      return back + `<h2>${esc(t.name)}</h2>
+        <div class="lvl" style="color:${LEVEL_COLORS[t.level]}">● ${TECH.levels[t.level]}<span class="eng">engl. ${esc(t.english)}</span></div>
+        <h4>Idee</h4><p>${rich(t.idea)}</p>
+        <h4>So wendest du sie an</h4><ol>${t.how.map(x => `<li>${rich(x)}</li>`).join("")}</ol>
+        <h4>Beispiel</h4>${t.board ? svgBoard(t.board) : ""}${t.example.map(x => `<p>${rich(x)}</p>`).join("")}
+        ${t.tip ? `<h4>Tipp</h4><p>${rich(t.tip)}</p>` : ""}
+        <div class="nav">${prev}${next}</div>`;
+    };
+    let start = "list";
+    if (name) { const t = findTech(name); if (t) start = String(TECH.techniques.indexOf(t)); }
+    dialog(`<div class="tech" id="techBox"></div>`, [{ label: "Schließen", primary: true }], {
+      cls: "dlg wide",
+      onOpen: (d) => {
+        const box = d.querySelector("#techBox");
+        const show = (p) => {
+          box.innerHTML = p === "list" ? `<h2>Lösungstechniken</h2>${list()}` : page(p);
+          box.querySelectorAll("button[data-p]").forEach(b => b.onclick = () => show(b.dataset.p));
+          d.scrollTop = 0;
+        };
+        show(start);
+      },
+    });
   }
 
   // ---------------------------------------------------------------- Maus & Finger
@@ -1951,6 +2166,7 @@ Der Spielstand wird automatisch auf diesem Gerät gespeichert.`);
     if (S.paused) return;
     if (k === "g" || k === "G") { toggleRegionMode(); return; }
     if (k === "x" || k === "X") { toggleDiagonals(); return; }
+    if (k === "f" || k === "F") { toggleColors(); return; }
     if (S.regionMode) { if (k >= "1" && k <= "9") { S.paintRegion = +k - 1; regionStatus(); render(); } return; }
     if (k >= "1" && k <= "9") inputDigit(+k, S.noteMode);
     else if (k === "0" || k === "Delete" || k === "Backspace") erase();
@@ -1982,6 +2198,8 @@ Der Spielstand wird automatisch auf diesem Gerät gespeichert.`);
   $("btnCheck").onclick = check;
   $("btnRegions").onclick = toggleRegionMode;
   $("btnDiag").onclick = toggleDiagonals;
+  $("btnColors").onclick = toggleColors;
+  $("status").onclick = () => { if (S.hintTech && S.statusMsg.startsWith("Tipp:")) techDialog(S.hintTech); };
   $("btnCancelEdit").onclick = cancelEdit;
 
   // ---------------------------------------------------------------- Speichern
@@ -2004,10 +2222,10 @@ Der Spielstand wird automatisch auf diesem Gerät gespeichert.`);
         layout(); render(); return;
       } catch (e) { /* defekt -> neues Spiel */ }
     }
-    newGame(2, false, false, false);
+    newGame(2, false, false, false, false);
   }
   // Für Tests von außen erreichbar
-  window.SudokuUI = { S, render, layout, newGame, startEdit, finishEdit, importCode, analyze, hint, settings };
+  window.SudokuUI = { S, render, layout, newGame, startEdit, finishEdit, importCode, analyze, hint, settings, techDialog };
   start();
 })();
 
